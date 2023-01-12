@@ -34,8 +34,3 @@ module internal AaTree =
             ky.SetIdx (size left) (size right)
             T(lvx + 1, left, ky, right)
         | t -> t
-
-    let inline nlvl node =
-        match node with
-        | T(lvt, _, _, _) as t -> if sngl t then lvt else lvt + 1
-        | _ -> failwith "unexpected nlvl case"

@@ -10,6 +10,7 @@
     <Compile Include="RopeNode.fs" />
     <Compile Include="RopeData.fs" />
     <Compile Include="AaTree.fs" />
+    <Compile Include="AppendTree.fs" />
   </ItemGroup>
 
 </Project>

@@ -2,7 +2,10 @@
 
 open AppendRopeTypes
 
-module RopeNode =
+module internal RopeNode =
+    let inline create string = 
+        { String = string; LeftIdx = 0; RightIdx = 0; }
+
     let inline concat string node =
         node.String <- node.String + string
 
