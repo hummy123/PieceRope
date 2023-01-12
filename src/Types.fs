@@ -1,6 +1,6 @@
 ﻿namespace AppendRope
 
-module Types =
+module AppendRopeTypes =
     type RopeNode = {
         mutable String: string;
         mutable LeftIdx: int;

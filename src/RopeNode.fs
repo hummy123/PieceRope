@@ -1,6 +1,6 @@
 ﻿namespace AppendRope
 
-open Types
+open AppendRopeTypes
 
 module RopeNode =
     let inline concat string node =

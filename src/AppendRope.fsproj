@@ -8,6 +8,8 @@
   <ItemGroup>
     <Compile Include="Types.fs" />
     <Compile Include="RopeNode.fs" />
+    <Compile Include="RopeData.fs" />
+    <Compile Include="AaTree.fs" />
   </ItemGroup>
 
 </Project>
