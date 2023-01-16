@@ -1,8 +1,8 @@
-﻿namespace AppendRope
+﻿namespace Buffer
 
-open AppendRopeTypes
+open Types
 
-module internal RopeNode =
+module internal Node =
     let inline create string = 
         { String = string; LeftIdx = 0; RightIdx = 0; }
 
@@ -15,7 +15,7 @@ module internal RopeNode =
     let inline setIdx left right node =
         { String = node.String; LeftIdx = left; RightIdx = right; }
 
-    type RopeNode with
+    type BufferNode with
         member inline this.AddLeft delta = addLeft delta this
         member inline this.AddRight delta = addRight delta this
         member inline this.SetIdx left right = setIdx left right this

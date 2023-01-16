@@ -1,40 +1,63 @@
-﻿namespace AppendRope
+﻿namespace Buffer
 
-open AppendRopeTypes
-open RopeNode
-open RopeData
+open Types
+open Node
+open Data
+
+(* Contains AA Tree rebalancing logic, specific for buffer metadata. *)
+module private AaTree =
+    let inline skew node =
+        match node with
+        | BT(lvx, BT(lvy, a, ky, b), kx, c) as t when lvx = lvy ->
+            let kx = kx.SetIdx (size b) (size c)
+            let innerNode =  BT(lvx, b, kx, c)
+            let ky = ky.SetIdx (size a) (size innerNode)
+            BT(lvx, a, ky, innerNode)
+        | t -> t
+
+    let inline split node =
+        match node with
+        | BT(lvx, a, kx, BT(lvy, b, ky, BT(lvz, c, kz, d))) as t when lvx = lvy && lvy = lvz -> 
+            let right = BT(lvx, c, kz, d)
+            let kx = kx.SetIdx (size a) (size b)
+            let left = BT(lvx, a, kx, b)
+            let ky = ky.SetIdx (size left) (size right)
+            BT(lvx + 1, left, ky, right)
+        | t -> t
+
 open AaTree
 
-module AppendTree =
+(* Contains core algorithms, append and substring, for buffer. *)
+module Tree =
     /// Used for CPS.
     let inline topLevelCont t = t
 
-    /// Returns an empty AppendTree.
-    let empty = E
+    /// Returns an empty BufferTree.
+    let empty = BE
 
-    /// Append a string to an AppendTree.
-    let append string node = 
+    /// Append a string to an BufferTree.
+    let append string tree = 
         let rec insMax node cont =
             match node with
-            | E -> T(1, E, RopeNode.create string, E) |> cont
-            | T(h, l, v, r) -> 
+            | BE -> BT(1, BE, Node.create string, BE) |> cont
+            | BT(h, l, v, r) -> 
                 insMax r (fun r' ->
                     let v = v.AddRight string.Length
-                    T(h, l, v, r')
+                    BT(h, l, v, r')
                     |> skew |> split |> cont
                 )
-        insMax node topLevelCont
+        insMax tree topLevelCont
 
     /// Returns a substring from the rope at the given start index and length.
-    let substring (start: int) (length: int) rope =
+    let substring (start: int) (length: int) tree =
         let finish = start + length
         let acc = ResizeArray<char>() (* Using mutable array for performance. *)
         
         (* To do: maybe convert to CPS. *)
         let rec sub curIndex node =
             match node with
-            | E -> ()
-            | T(h, l, v, r) ->
+            | BE -> ()
+            | BT(h, l, v, r) ->
                 if start < curIndex
                 then sub (curIndex - stringLength l - sizeRight l) l
                 let nextIndex = curIndex + v.String.Length
@@ -63,5 +86,5 @@ module AppendTree =
                 if finish > nextIndex
                 then sub (nextIndex + sizeLeft r) r
 
-        sub (sizeLeft rope) rope
+        sub (sizeLeft tree) tree
         new string(acc.ToArray())
