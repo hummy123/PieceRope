@@ -16,14 +16,10 @@ module AppendTree =
     let append string node = 
         let rec insMax node cont =
             match node with
-            | E -> T(1, E, RopeNode.create string, E)
-            | T(h, l, v, E) when v.String.Length < TargetNodeLength ->
-                v.Concat string
-                T(h, l, v, E)
-                |> skew |> split |> cont
+            | E -> T(1, E, RopeNode.create string, E) |> cont
             | T(h, l, v, r) -> 
                 insMax r (fun r' ->
-                    v.AddRight string.Length
+                    let v = v.AddRight string.Length
                     T(h, l, v, r')
                     |> skew |> split |> cont
                 )
