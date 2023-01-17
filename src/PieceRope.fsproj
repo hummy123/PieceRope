@@ -13,6 +13,7 @@
     <Compile Include="PieceTypes.fs" />
     <Compile Include="PieceNode.fs" />
     <Compile Include="PieceData.fs" />
+    <Compile Include="PieceLogic.fs" />
   </ItemGroup>
 
 </Project>

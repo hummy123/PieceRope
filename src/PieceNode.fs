@@ -2,7 +2,7 @@
 
 open PieceTree.Types
 
-module Types =
+module Node =
     let inline create start length = 
         { Start = start; Length = length; LeftIdx = 0; RightIdx = 0; }
 
