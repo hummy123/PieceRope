@@ -15,6 +15,7 @@
     <Compile Include="PieceData.fs" />
     <Compile Include="PieceLogic.fs" />
     <Compile Include="PieceTree.fs" />
+    <Compile Include="PieceRope.fs" />
   </ItemGroup>
 
 </Project>
