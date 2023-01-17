@@ -93,6 +93,55 @@ module private AaTree =
     let fold f x t =
         foldOpt (OptimizedClosures.FSharpFunc<_, _, _>.Adapt (f)) x t
 
+open AaTree
+
 (* Contains core PieceTree logic. *)
 module PieceTree =
-    let d = 0
+    let empty = PE
+
+    let text piecerope =
+        fold (fun acc pc ->
+            let text = Buffer.Tree.substring pc.Start pc.Length piecerope.Buffer
+            acc + text) "" piecerope.Tree
+
+    /// Used for CPS.
+    let inline topLevelCont t = t
+
+    let private insMin pcStart pcLength tree =
+        let rec min node cont =
+            match node with
+            | PE -> PT(1, PE, Node.create pcStart pcLength, PE) |> cont
+            | PT(h, l, v, r) ->
+                min l (fun l' ->
+                    let v = v.AddLeft pcLength
+                    PT(h, l', v, r)
+                    |> skew |> split |> cont
+                )
+        min tree topLevelCont
+
+    let private insMax pcStart pcLength tree =
+        let rec max node cont =
+            match node with
+            | PE -> PT(1, PE, Node.create pcStart pcLength, PE) |> cont
+            | PT(h, l, v, r) ->
+                max r (fun r' ->
+                    let v = v.AddRight pcLength
+                    PT(h, l, v, r')
+                    |> skew |> split |> cont
+                )
+        max tree topLevelCont
+
+    let insert insIndex pcStart pcLength tree =
+        let rec ins curIndex node = 
+            match node with
+            | PE -> PT(1, PE, Node.create pcStart pcLength, PE)
+            | PT(h, l, v, r) when insIndex < curIndex ->
+                let nextIndex = curIndex - length l - sizeRight l
+                let v' = v.AddLeft pcLength
+                PT(h, ins nextIndex l, v', r) |> skew |> split
+            | PT(h, l, v, r) when insIndex > curIndex + v.Length ->
+                let nodeEndIndex = curIndex + v.Length
+                let nextIndex = curIndex + sizeLeft r
+                let v' = v.AddRight pcLength
+                PT(h, l, v', ins nextIndex r) |> skew |> split
+            | PT(h, l, v, r) when insIndex = curIndex ->
