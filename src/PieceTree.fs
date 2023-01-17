@@ -140,8 +140,20 @@ module PieceTree =
                 let v' = v.AddLeft pcLength
                 PT(h, ins nextIndex l, v', r) |> skew |> split
             | PT(h, l, v, r) when insIndex > curIndex + v.Length ->
-                let nodeEndIndex = curIndex + v.Length
                 let nextIndex = curIndex + sizeLeft r
                 let v' = v.AddRight pcLength
                 PT(h, l, v', ins nextIndex r) |> skew |> split
             | PT(h, l, v, r) when insIndex = curIndex ->
+                let v' = v.AddLeft pcLength
+                PT(h, insMax pcStart pcLength l, v', r) |> skew |> split
+            | PT(h, l, v, r) when insIndex = curIndex + v.Length ->
+                let v' = { v with Length = v.Length + pcLength }
+                PT(h, l, v', r)
+            | PT(h, l, v, r) ->
+                let v' = { v with Start = pcStart; Length = pcLength; }
+                let (lLength, rFinish) = PieceLogic.split v (insIndex - curIndex)
+                let l' = insMax v.Start lLength l
+                let r' = insMin lLength rFinish r
+                PT(h, l', v', r') |> skew |> split
+
+        ins (sizeLeft tree) tree

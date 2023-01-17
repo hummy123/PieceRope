@@ -5,22 +5,14 @@ open PieceTree.Types
 open PieceTree.Node
 
 module PieceLogic =
-    /// Merges two pieces into one.
-    /// Expects to be called only when pieces are consecutive. 
-    let inline merge (a: PieceNode) (b: PieceNode) =
-        { a with Length = a.Length + b.Length }
-
     /// Split operation that returns three pieces.
     /// Correct usage of this method assumes that Piece a starts before and ends after Piece b.
     let inline split (a: PieceNode) (difference: int) =
         (* p1 and p3 are both leaves with no child nodes. 
           The piece we are inserting should take node "A"s index metadata. *)
         let p1Length = a.Start + difference
-        let p1 = Node.create a.Start p1Length
-
         let p2Finish = a.Start + a.Length - difference
-        let p3 = Node.create p1Length (p2Finish)
-        (p1, p3)
+        (p1Length, p2Finish)
 
     let inline deleteInRange curIndex start finish (piece: PieceNode) =
         (* p1 retains metadata and p2 is leaf *)
