@@ -136,7 +136,7 @@ module PieceTree =
             match node with
             | PE -> PT(1, PE, Node.create pcStart pcLength, PE)
             | PT(h, l, v, r) when insIndex < curIndex ->
-                let nextIndex = curIndex - length l - sizeRight l
+                let nextIndex = curIndex - pcLength l - sizeRight l
                 let v' = v.AddLeft pcLength
                 PT(h, ins nextIndex l, v', r) |> skew |> split
             | PT(h, l, v, r) when insIndex > curIndex + v.Length ->
@@ -157,3 +157,47 @@ module PieceTree =
                 PT(h, l', v', r') |> skew |> split
 
         ins (sizeLeft tree) tree
+
+    (* Repeated if-statements used in both delete and substring. *)
+    let inline private inRange start curIndex finish nodeEndIndex =
+        start <= curIndex && finish >= nodeEndIndex
+
+    let inline private startIsInRange start curIndex finish nodeEndIndex =
+        start <= curIndex && finish < nodeEndIndex && curIndex < finish
+
+    let inline private endIsInRange start curIndex finish nodeEndIndex =
+        start > curIndex && finish >= nodeEndIndex && start <= nodeEndIndex
+
+    let inline private middleIsInRange start curIndex finish nodeEndIndex =
+        start >= curIndex && finish <= nodeEndIndex
+
+    let substring (start: int) (length: int) table =
+        let finish = start + length
+        let rec sub curIndex node acc =
+            match node with
+            | PE -> acc
+            | PT(h, l, v, r) ->
+                let left =
+                    if start < curIndex
+                    then sub (curIndex - pcLength l - sizeRight l) l acc
+                    else acc
+
+                let nodeEndIndex = curIndex + v.Length
+                let middle = 
+                    if inRange start curIndex finish nodeEndIndex then
+                        left + PieceLogic.text v table
+                    elif startIsInRange start curIndex finish nodeEndIndex then
+                        left + PieceLogic.textAtStart curIndex finish v table
+                    elif endIsInRange start curIndex finish nodeEndIndex then
+                        left + PieceLogic.textAtEnd curIndex start v table
+                    elif middleIsInRange start curIndex finish nodeEndIndex then
+                        left + PieceLogic.textInRange curIndex start finish v table
+                    else
+                        left
+
+                if finish > nodeEndIndex
+                then sub (nodeEndIndex + sizeLeft r) r middle
+                else middle
+
+        sub (sizeLeft table.Tree) table.Tree ""
+
