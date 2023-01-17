@@ -20,10 +20,9 @@ module PieceLogic =
         let p1 = {piece with Length = p1Length}
 
         let p2Start = finish - curIndex + piece.Start
-        let p2Finish = piece.Start + piece.Length - p2Start
-        let p2 = Node.create p2Start p2Finish
+        let p2Length = piece.Length - p2Start
 
-        (p1, p2)
+        (p1, p2Start, p2Length)
 
     let inline deleteAtStart curIndex finish piece =
         let difference = finish - curIndex

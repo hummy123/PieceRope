@@ -3,7 +3,7 @@
 open PieceTree.Types
 
 module Data = 
-    let inline pcLength node = 
+    let inline nLength node = 
         match node with
         | PE -> 0
         | PT(_, _, v, _) -> v.Length
