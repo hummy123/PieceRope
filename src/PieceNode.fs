@@ -14,3 +14,8 @@ module Node =
 
     let inline setIdx left right node =
         { node with LeftIdx = left; RightIdx = right; }
+
+    type PieceNode with
+        member inline this.AddLeft leftDelta = addLeft leftDelta this
+        member inline this.AddRight rightDelta = addRight rightDelta this
+        member inline this.SetIdx left right = setIdx left right this
