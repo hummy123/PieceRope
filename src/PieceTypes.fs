@@ -2,7 +2,7 @@
 
 open Buffer.Types
 
-module PieceTypes =
+module Types =
     type PieceNode = {
         Start: int;
         Length: int;

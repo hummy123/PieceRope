@@ -11,6 +11,8 @@
     <Compile Include="BufferData.fs" />
     <Compile Include="BufferTree.fs" />
     <Compile Include="PieceTypes.fs" />
+    <Compile Include="PieceNode.fs" />
+    <Compile Include="PieceData.fs" />
   </ItemGroup>
 
 </Project>
