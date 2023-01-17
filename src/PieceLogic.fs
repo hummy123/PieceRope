@@ -1,6 +1,6 @@
 ﻿namespace PieceTree
 
-open Buffer
+open Buffer.Tree
 open PieceTree.Types
 open PieceTree.Node
 
@@ -43,18 +43,18 @@ module PieceLogic =
         { piece with Length = start - curIndex }
 
     let inline text piece table =
-        Tree.substring piece.Start piece.Length table.Buffer
+        substring piece.Start piece.Length table.Buffer
 
     let inline textInRange curIndex start finish piece table =
         let textStart = start - curIndex + piece.Start
         let textLength = finish - curIndex + piece.Start - textStart
-        Tree.substring textStart textLength table.Buffer
+        substring textStart textLength table.Buffer
 
     let inline textAtStart curIndex finish piece table =
         let textLength = finish - curIndex
-        Tree.substring piece.Start textLength table.Buffer
+        substring piece.Start textLength table.Buffer
 
     let inline textAtEnd curIndex start piece table =
         let textLength = start - curIndex
         let textStart = textLength + piece.Start
-        Tree.substring textStart textLength table.Buffer
+        substring textStart textLength table.Buffer
