@@ -5,10 +5,14 @@ open System
 module Program =
     [<EntryPoint>]
     let main _ =  
-        let str = String.replicate (1024 * 1024) "a"
-        printfn "start: %A" DateTime.Now
-        let mutable rope = PieceRope.create str
-        printfn "finish: %A" DateTime.Now
-        rope.Insert(0, str)
-        Console.ReadLine()
+        let mutable table = PieceRope.create ""
+        let mutable runningStr = ""
+        for i in [0..10] do
+            if i = 2 then
+                ()
+            let halfLength = runningStr.Length / 2
+            table <- table.Insert(halfLength, "hello")
+            runningStr <- runningStr.Substring(0,halfLength) + "hello" + runningStr.Substring(halfLength)
+            printfn "rope:\t %A" <| table.Text()
+            printfn "str:\t %A" runningStr
         0

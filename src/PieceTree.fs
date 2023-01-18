@@ -156,10 +156,11 @@ module PieceTree =
                 let v' = v.AddRight pcLength
                 PT(h, l, v', insMin pcStart pcLength r) |> skew |> split
             | PT(h, l, v, r) ->
+                let difference = insIndex - curIndex
+                let rStart = v.Start + difference
+                let l' = insMax v.Start difference l
+                let r' = insMin rStart (v.Length - difference) r
                 let v' = { v with Start = pcStart; Length = pcLength; }
-                let (lLength, rFinish) = PieceLogic.split v (insIndex - curIndex)
-                let l' = insMax v.Start lLength l
-                let r' = insMin lLength rFinish r
                 PT(h, l', v', r') |> skew |> split
 
         ins (sizeLeft tree) tree

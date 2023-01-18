@@ -10,9 +10,9 @@ module PieceLogic =
     let inline split (a: PieceNode) (difference: int) =
         (* p1 and p3 are both leaves with no child nodes. 
           The piece we are inserting should take node "A"s index metadata. *)
-        let p1Length = a.Start + difference
-        let p2Finish = a.Start + a.Length - difference
-        (p1Length, p2Finish)
+        // let p1Length = difference
+        let p2Length = a.Start + difference
+        (difference, p2Length)
 
     let inline deleteInRange curIndex start finish (piece: PieceNode) =
         (* p1 retains metadata and p2 is leaf *)
