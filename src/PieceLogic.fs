@@ -5,15 +5,6 @@ open PieceTree.Types
 open PieceTree.Node
 
 module PieceLogic =
-    /// Split operation that returns three pieces.
-    /// Correct usage of this method assumes that Piece a starts before and ends after Piece b.
-    let inline split (a: PieceNode) (difference: int) =
-        (* p1 and p3 are both leaves with no child nodes. 
-          The piece we are inserting should take node "A"s index metadata. *)
-        // let p1Length = difference
-        let p2Length = a.Start + difference
-        (difference, p2Length)
-
     let inline deleteInRange curIndex start finish (piece: PieceNode) =
         (* p1 retains metadata and p2 is leaf *)
         let p1Length = start - curIndex
