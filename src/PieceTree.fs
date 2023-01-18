@@ -143,7 +143,7 @@ module PieceTree =
                 let v' = v.AddLeft pcLength
                 PT(h, ins nextIndex l, v', r) |> skew |> split
             | PT(h, l, v, r) when insIndex > curIndex + v.Length ->
-                let nextIndex = curIndex + sizeLeft r
+                let nextIndex = curIndex + v.Length + sizeLeft r
                 let v' = v.AddRight pcLength
                 PT(h, l, v', ins nextIndex r) |> skew |> split
             | PT(h, l, v, r) when insIndex = curIndex ->
