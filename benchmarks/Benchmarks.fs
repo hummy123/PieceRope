@@ -34,11 +34,9 @@ type InsertIntoDocument() =
 
     [<IterationSetup>]
     member this.CreateDocument() =
-        this.rope <- PieceRope.empty
-        this.docLength <- 0
-        for i in [0..this.insertTimes] do
-            this.rope <- this.rope.Insert(0, "hello")
-            this.docLength <- this.docLength + 5
+        let str = String.replicate this.insertTimes "hello"
+        this.docLength <- str.Length
+        this.rope <- PieceRope.create str
 
     [<Benchmark; InvocationCount(1000)>]
     member this.InsertIntoRopeAtStart() = 
@@ -62,11 +60,9 @@ type DeleteFromDocument() =
 
     [<IterationSetup>]
     member this.CreateDocument() =
-        this.rope <- PieceRope.empty
-        this.docLength <- 0
-        for i in [0..this.insertTimes] do
-            this.rope <- this.rope.Insert(0, "hello")
-            this.docLength <- this.docLength + 5
+        let str = String.replicate this.insertTimes "hello"
+        this.docLength <- str.Length
+        this.rope <- PieceRope.create str
 
     [<Benchmark; InvocationCount(1000)>]
     member this.DeleteFromStartOfrope() = 
@@ -90,11 +86,9 @@ type GetSubstring() =
 
     [<IterationSetup>]
     member this.CreateDocument() =
-        this.rope <- PieceRope.empty
-        this.docLength <- 0
-        for i in [0..this.insertTimes] do
-            this.rope <- this.rope.Insert(0, "hello")
-            this.docLength <- this.docLength + 5
+        let str = String.replicate this.insertTimes "hello"
+        this.docLength <- str.Length
+        this.rope <- PieceRope.create str
 
     [<Benchmark; InvocationCount(1000)>]
     member this.GetSubstringAtStartOfrope() = 
