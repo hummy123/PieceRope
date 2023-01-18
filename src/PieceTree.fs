@@ -149,18 +149,20 @@ module PieceTree =
             | PT(h, l, v, r) when insIndex = curIndex ->
                 let v' = v.AddLeft pcLength
                 PT(h, insMax pcStart pcLength l, v', r) |> skew |> split
-            | PT(h, l, v, r) when insIndex = curIndex + v.Length && isConsecutive v pcStart ->
-                let v' = { v with Length = v.Length + pcLength }
-                PT(h, l, v', r)
             | PT(h, l, v, r) when insIndex = curIndex + v.Length ->
                 let v' = v.AddRight pcLength
                 PT(h, l, v', insMin pcStart pcLength r) |> skew |> split
             | PT(h, l, v, r) ->
                 let difference = insIndex - curIndex
                 let rStart = v.Start + difference
+                let rLength = v.Length - difference
                 let l' = insMax v.Start difference l
-                let r' = insMin rStart (v.Length - difference) r
-                let v' = { v with Start = pcStart; Length = pcLength; }
+                let r' = insMin rStart rLength r
+                let v' = { v with 
+                            Start = pcStart; 
+                            Length = pcLength; 
+                            LeftIdx = v.LeftIdx + difference;
+                            RightIdx = v.RightIdx + rLength; }
                 PT(h, l', v', r') |> skew |> split
 
         ins (sizeLeft tree) tree

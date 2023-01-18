@@ -10,9 +10,8 @@ module PieceRope =
 
     let inline insert index (string: string) piecerope =
         let pcStart = size piecerope.Buffer
-        let pcLength = string.Length
         let buffer = Buffer.Tree.append string piecerope.Buffer
-        let pt = PieceTree.insert index pcStart pcLength piecerope.Tree
+        let pt = PieceTree.insert index pcStart string.Length piecerope.Tree
         { Tree = pt; Buffer = buffer }
 
     let inline create string =
