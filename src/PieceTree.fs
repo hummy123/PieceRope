@@ -68,17 +68,14 @@ module private AaTree =
     let rec splitMax =
         function
         | PT(_, l, v, PE) -> 
-            let v = 
-                { v with 
-                    LeftIdx = size l; 
-                    RightIdx = 0; }
+            let v = v.SetIdx (size l) 0
             l, v
         | PT(h, l, v, r) -> 
             match splitMax r with
             | r', b -> 
-                let v' = { v with RightIdx = size r' }
+                let v' = v.SetRightIdx (size r')
                 let tree = PT(h, l, v', r') |> adjust
-                let b' = { b with RightIdx = size tree }
+                let b' = b.SetRightIdx (size tree)
                 tree, b'
         | _ -> failwith "unexpected splitMax case"
 
@@ -150,7 +147,7 @@ module PieceTree =
                 let v' = v.AddLeft pcLength
                 PT(h, insMax pcStart pcLength l, v', r) |> skew |> split
             | PT(h, l, v, r) when insIndex = curIndex + v.Length && isConsecutive v pcStart ->
-                let v' = { v with Length = v.Length + pcLength }
+                let v' = v.SetLength (v.Length + pcLength)
                 PT(h, l, v', r)
             | PT(h, l, v, r) when insIndex = curIndex + v.Length ->
                 let v' = v.AddRight pcLength
@@ -161,11 +158,7 @@ module PieceTree =
                 let rLength = v.Length - difference
                 let l' = insMax v.Start difference l
                 let r' = insMin rStart rLength r
-                let v' = { v with 
-                            Start = pcStart; 
-                            Length = pcLength; 
-                            LeftIdx = v.LeftIdx + difference;
-                            RightIdx = v.RightIdx + rLength; }
+                let v' = createWithMetadata pcStart pcLength (v.LeftIdx + difference) (v.RightIdx + rLength)
                 PT(h, l', v', r') |> skew |> split
 
         ins (sizeLeft tree) tree
@@ -235,23 +228,23 @@ module PieceTree =
                     then right
                     else 
                         let (newLeft, newVal) = splitMax left
-                        let v' = {newVal with LeftIdx = size newLeft; RightIdx = size right; }
+                        let v' = newVal.SetIdx (size newLeft) (size right)
                         PT(h, newLeft, v', right) |> adjust
                 elif startIsInRange start curIndex finish nodeEndIndex then
                     let v' = PieceLogic.deleteAtStart curIndex finish v
-                    let v' = { v' with LeftIdx = size left; RightIdx = size right; }
+                    let v' = v'.SetIdx (size left) (size right)
                     PT(h, left, v', right) |> skew |> split
                 elif endIsInRange start curIndex finish nodeEndIndex then
                     let v' = PieceLogic.deleteAtEnd curIndex start v
-                    let v' = {v' with LeftIdx = size left; RightIdx = size right }
+                    let v' = v'.SetIdx (size left) (size right)
                     PT(h, left, v', right) |> adjust
                 elif middleIsInRange start curIndex finish nodeEndIndex then
                     let (p1, p2Start, p2Length) = PieceLogic.deleteInRange curIndex start finish v
                     let newRight = insMin p2Start p2Length right
-                    let v' = {p1 with LeftIdx = size left; RightIdx = size right }
+                    let v' = p1.SetIdx (size left) (size right)
                     PT(h, left, v', newRight) |> skew |> split
                 else
-                    let v' = {v with LeftIdx = size left; RightIdx = size right }
+                    let v' = v.SetIdx (size left) (size right)
                     PT(h, left, v', right) |> adjust
                 
         del (sizeLeft tree) tree 
