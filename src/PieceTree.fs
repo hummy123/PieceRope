@@ -230,7 +230,7 @@ module PieceTree =
                 elif middleIsInRange start curIndex finish nodeEndIndex then
                     let (p1, p2Start, p2Length, p2Lines) = PieceLogic.deleteInRange curIndex start finish v
                     let newRight = insMin p2Start p2Length p2Lines right
-                    let v' = {p1 with LeftIdx = size left; RightIdx = size right }
+                    let v' = p1.SetData (idxLnSize left) (idxLnSize newRight) 
                     PT(h, left, v', newRight) |> skew |> split
                 else
                     let v' = {v with LeftIdx = size left; RightIdx = size right }
@@ -299,7 +299,12 @@ module PieceTree =
                         let length = v.Lines[0] + 1 (* + 1 gives us \n in string *)
                         left + PieceLogic.atStartAndLength v.Start length table
                     elif endIsInLine curLine line nodeEndLine then
-                        let start = v.Lines[v.Lines.Length - 1]
+                        let last = v.Lines[v.Lines.Length - 1]
+                        let start = 
+                            if last = v.Length - 1
+                            then last
+                            else last + 1
+
                         let length = v.Length - start
                         left + PieceLogic.atStartAndLength start length table
                     elif middleIsInLine curLine line nodeEndLine then

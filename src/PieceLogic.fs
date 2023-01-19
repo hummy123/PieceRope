@@ -5,22 +5,35 @@ open PieceTree.Types
 open PieceTree.Node
 
 module PieceLogic =
+    /// Returns two arrays containing the lines in a PieceNode, split at a specific position.
+    /// Intended to be used when we insert into a piece.
     let inline splitLines difference lines =
         let arrLeft = ResizeArray()
         let arrRight = ResizeArray()
         for i in lines do
             if i < difference (* not sure if it should be < or <= *)
             then arrLeft.Add i
-            else arrRight.Add i
+            else arrRight.Add (i - difference)
         arrLeft.ToArray(), arrRight.ToArray()
+
+    let inline deleteLinesInRange p1Length p2Start lines =
+        let p1Lines = ResizeArray()
+        let p2Lines = ResizeArray()
+        for i in lines do
+            if i <= p1Length
+            then p1Lines.Add i
+            elif i >= p2Start
+            then p2Lines.Add (i - p2Start)
+        p1Lines.ToArray(), p2Lines.ToArray()
 
     let inline deleteInRange curIndex start finish (piece: PieceNode) =
         (* p1 retains metadata and p2 is leaf *)
         let p1Length = start - curIndex
-        let (p1Lines, p2Lines) = splitLines p1Length piece.Lines
+        let p2Start = finish - curIndex
+        let (p1Lines, p2Lines) = deleteLinesInRange p1Length p2Start piece.Lines
         let p1 = {piece with Length = p1Length; Lines = p1Lines}
 
-        let p2Start = finish - curIndex + piece.Start
+        let p2Start = p2Start + piece.Start
         let p2Length = piece.Length - p2Start
 
         (p1, p2Start, p2Length, p2Lines)
