@@ -10,3 +10,5 @@ let ``Rope.GetLine returns line we inserted`` () =
     for i in [0..9] do
         let line = PieceRope.getLine i rope
         Assert.Equal(sprintf "%i\n" i, line)
+    let line = PieceRope.getLine 10 rope
+    Assert.Equal("\n", line)
