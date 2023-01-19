@@ -276,7 +276,7 @@ module PieceTree =
         nodeStartLine = searchLine && searchLine < nodeEndLine
 
     let inline private endIsInLine nodeStartLine searchLine nodeEndLine =
-        nodeStartLine < searchLine && searchLine = nodeEndLine
+        nodeStartLine > searchLine && searchLine = nodeEndLine
 
     let inline private middleIsInLine nodeStartLine searchLine nodeEndLine =
         nodeStartLine < searchLine && nodeEndLine > searchLine
@@ -296,17 +296,21 @@ module PieceTree =
                     if lineInRange curLine line nodeEndLine then
                         left + PieceLogic.text v table
                     elif startIsInLine curLine line nodeEndLine then
-                        let length = v.Lines[0] - 1
+                        let length = v.Lines[0] + 1 (* + 1 gives us \n in string *)
                         left + PieceLogic.atStartAndLength v.Start length table
                     elif endIsInLine curLine line nodeEndLine then
-                        let start = v.Lines[v.Lines.Length - 1] + v.Start
-                        let length = start - v.Start
+                        let start = v.Lines[v.Lines.Length - 1]
+                        let length = v.Length
                         left + PieceLogic.atStartAndLength start length table
                     elif middleIsInLine curLine line nodeEndLine then
                         let lineDifference = line - curLine
-                        let lineStart = v.Lines[lineDifference]
-                        let lineFinish = v.Lines[lineDifference + 1] - 1
-                        left + PieceLogic.atStartAndLength lineStart lineFinish table
+                        let lineStart = v.Lines[lineDifference] - v.Lines[0] + v.Start
+                        let pos1, pos2 = 
+                            if lineDifference = v.Lines.Length - 1
+                            then lineDifference, lineDifference - 1
+                            else lineDifference + 1, lineDifference
+                        let lineLength = v.Lines[pos1]  - v.Lines[pos2]
+                        left + PieceLogic.atStartAndLength lineStart lineLength table
                     else
                         left
 
