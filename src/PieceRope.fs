@@ -6,7 +6,7 @@ open PieceTree.Types
 open PieceTree
 
 module PieceRope = 
-    let private findLineBreaks (string: string) =
+    let inline findLineBreaks (string: string) =
         let arr = ResizeArray()
         for i = 0 to string.Length - 1 do
             if string[i] = '\n' || string[i] = '\r'
