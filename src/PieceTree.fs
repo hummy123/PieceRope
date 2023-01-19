@@ -268,3 +268,37 @@ module PieceTree =
 
         sub (sizeLeft table.Tree) table.Tree ""
 
+    let getLine line table =
+        let rec get curLine node acc =
+            match node with
+            | PE -> acc
+            | PT(h, l, v, r) ->
+                let left = 
+                    if line < curLine
+                    then get (curLine - nLines l - linesRight l) l acc
+                    else acc
+
+                let nodeEndLine = curLine + v.Lines.Length
+                let middle =
+                    if inRange line curLine line nodeEndLine then
+                        left + PieceLogic.text v table
+                    elif startIsInRange line curLine line nodeEndLine then
+                        let length = v.Lines[0] - 1
+                        left + PieceLogic.atStartAndLength v.Start length table
+                    elif endIsInRange line curLine line nodeEndLine then
+                        let start = v.Lines[v.Lines.Length - 1] + v.Start
+                        let length = start - v.Start
+                        left + PieceLogic.atStartAndLength start length table
+                    elif middleIsInRange line curLine line nodeEndLine then
+                        let lineDifference = line - curLine
+                        let lineIndex = Array.findIndex (fun x -> x = lineDifference) v.Lines
+                        let lineFinish = v.Lines[lineIndex + 1] - 1
+                        left + PieceLogic.atStartAndLength lineIndex lineFinish table
+                    else
+                        left
+
+                if line > curLine
+                then get (nodeEndLine + linesLeft r) r middle
+                else middle
+
+        get (linesLeft table.Tree) table.Tree ""

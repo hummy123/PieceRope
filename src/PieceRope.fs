@@ -32,6 +32,9 @@ module PieceRope =
     let inline substring startIndex length piecerope =
         PieceTree.substring startIndex length piecerope
 
+    let inline getLine line piecerope =
+        PieceTree.getLine line piecerope
+
     let inline text piecerope =
         PieceTree.text piecerope
 
@@ -40,3 +43,4 @@ module PieceRope =
         member inline this.Delete(startIndex, length) = delete startIndex length this
         member inline this.Substring(startIndex, length) = substring startIndex length this
         member inline this.Text() = text this
+        member inline this.GetLine(line) = getLine line this

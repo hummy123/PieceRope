@@ -50,3 +50,7 @@ module PieceLogic =
         let textStart = start - curIndex + piece.Start
         let textLength = piece.Start + piece.Length - textStart
         substring textStart textLength table.Buffer
+
+    /// Returns a substring at the provided start and length.
+    let inline atStartAndLength start length table =
+        substring start length table.Buffer
