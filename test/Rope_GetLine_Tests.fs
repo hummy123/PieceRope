@@ -18,7 +18,7 @@ let ``Rope.GetLine returns line we inserted`` () =
 let ``Rope.GetLine returns whole string when we delete line break at middle.`` () =
     let rope = PieceRope.create "abcde\nfghij"
     Assert.Equal("abcde\n", rope.GetLine 0)
-    Assert.Equal("fghij", rope.GetLine 1) // <- issue is here, returns \n with string
+    Assert.Equal("fghij", rope.GetLine 1)
 
     let rope = rope.Delete(5, 1)
     Assert.Equal("abcdefghij", rope.GetLine 0)

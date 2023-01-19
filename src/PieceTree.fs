@@ -287,7 +287,7 @@ module PieceTree =
             | PE -> acc
             | PT(h, l, v, r) ->
                 let left = 
-                    if line < curLine
+                    if line <= curLine
                     then get (curLine - nLines l - linesRight l) l acc
                     else acc
 
@@ -301,9 +301,9 @@ module PieceTree =
                     elif endIsInLine curLine line nodeEndLine then
                         let last = v.Lines[v.Lines.Length - 1]
                         let start = 
-                            if last = v.Length - 1
-                            then last
-                            else last + 1
+                            if last < v.Length - 1
+                            then last + 1
+                            else last
 
                         let length = v.Length - start
                         left + PieceLogic.atStartAndLength start length table
@@ -319,7 +319,7 @@ module PieceTree =
                     else
                         left
 
-                if line > curLine
+                if line >= curLine
                 then get (nodeEndLine + linesLeft r) r middle
                 else middle
 

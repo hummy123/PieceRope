@@ -18,7 +18,6 @@ module PieceRope =
     let inline insert index (string: string) piecerope =
         let pcStart = size piecerope.Buffer
         let pcLines = findLineBreaks string
-        printfn "%A" pcLines
         let buffer = Buffer.Tree.append string piecerope.Buffer
         let pt = PieceTree.insert index pcStart string.Length pcLines piecerope.Tree
         { Tree = pt; Buffer = buffer }
