@@ -5,15 +5,25 @@ open PieceTree.Types
 open PieceTree.Node
 
 module PieceLogic =
+    let inline splitLines difference lines =
+        let arrLeft = ResizeArray()
+        let arrRight = ResizeArray()
+        for i in lines do
+            if i < difference (* not sure if it should be < or <= *)
+            then arrLeft.Add i
+            else arrRight.Add i
+        arrLeft.ToArray(), arrRight.ToArray()
+
     let inline deleteInRange curIndex start finish (piece: PieceNode) =
         (* p1 retains metadata and p2 is leaf *)
         let p1Length = start - curIndex
-        let p1 = {piece with Length = p1Length}
+        let (p1Lines, p2Lines) = splitLines p1Length piece.Lines
+        let p1 = {piece with Length = p1Length; Lines = p1Lines}
 
         let p2Start = finish - curIndex + piece.Start
         let p2Length = piece.Length - p2Start
 
-        (p1, p2Start, p2Length)
+        (p1, p2Start, p2Length, p2Lines)
 
     let inline deleteAtStart curIndex finish piece =
         let difference = finish - curIndex

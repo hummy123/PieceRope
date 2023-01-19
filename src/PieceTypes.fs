@@ -8,8 +8,9 @@ module Types =
         Length: int;
         LeftIdx: int;
         RightIdx: int;
-        // LeftLn: int; <- Add this later
-        // RightLn: int; <- Add this later
+        LeftLn: int;
+        RightLn: int;
+        Lines: int array;
     }
 
     type PieceTree =

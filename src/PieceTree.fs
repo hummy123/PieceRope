@@ -94,6 +94,7 @@ module private AaTree =
         foldOpt (OptimizedClosures.FSharpFunc<_, _, _>.Adapt (f)) x t
 
 open AaTree
+open PieceLogic
 
 (* Contains core PieceTree logic. *)
 module PieceTree =
@@ -107,25 +108,25 @@ module PieceTree =
     /// Used for CPS.
     let inline topLevelCont t = t
 
-    let private insMin pcStart pcLength tree =
+    let private insMin pcStart pcLength pcLines tree =
         let rec min node cont =
             match node with
-            | PE -> PT(1, PE, Node.create pcStart pcLength, PE) |> cont
+            | PE -> PT(1, PE, Node.create pcStart pcLength pcLines, PE) |> cont
             | PT(h, l, v, r) ->
                 min l (fun l' ->
-                    let v = v.AddLeft pcLength
+                    let v = v.AddLeft pcLength pcLines.Length
                     PT(h, l', v, r)
                     |> skew |> split |> cont
                 )
         min tree topLevelCont
 
-    let private insMax pcStart pcLength tree =
+    let private insMax pcStart pcLength pcLines tree =
         let rec max node cont =
             match node with
-            | PE -> PT(1, PE, Node.create pcStart pcLength, PE) |> cont
+            | PE -> PT(1, PE, Node.create pcStart pcLength pcLines, PE) |> cont
             | PT(h, l, v, r) ->
                 max r (fun r' ->
-                    let v = v.AddRight pcLength
+                    let v = v.AddRight pcLength pcLines.Length
                     PT(h, l, v, r')
                     |> skew |> split |> cont
                 )
@@ -134,36 +135,43 @@ module PieceTree =
     let inline isConsecutive (v: PieceNode) pcStart =
         v.Start + v.Length = pcStart
 
-    let insert insIndex pcStart pcLength tree =
+    let insert insIndex pcStart pcLength pcLines tree =
         let rec ins curIndex node = 
             match node with
-            | PE -> PT(1, PE, Node.create pcStart pcLength, PE)
+            | PE -> PT(1, PE, Node.create pcStart pcLength pcLines, PE)
             | PT(h, l, v, r) when insIndex < curIndex ->
                 let nextIndex = curIndex - nLength l - sizeRight l
-                let v' = v.AddLeft pcLength
+                let v' = v.AddLeft pcLength pcLines.Length
                 PT(h, ins nextIndex l, v', r) |> skew |> split
             | PT(h, l, v, r) when insIndex > curIndex + v.Length ->
                 let nextIndex = curIndex + v.Length + sizeLeft r
-                let v' = v.AddRight pcLength
+                let v' = v.AddRight pcLength pcLines.Length
                 PT(h, l, v', ins nextIndex r) |> skew |> split
             | PT(h, l, v, r) when insIndex = curIndex ->
-                let v' = v.AddLeft pcLength
-                PT(h, insMax pcStart pcLength l, v', r) |> skew |> split
+                let v' = v.AddLeft pcLength pcLines.Length
+                let l' = insMax pcStart pcLength pcLines l
+                PT(h, l', v', r) |> skew |> split
             | PT(h, l, v, r) when insIndex = curIndex + v.Length && isConsecutive v pcStart ->
+                // Todo: Concatente pcLines to this node as well
                 let v' = { v with Length = v.Length + pcLength }
                 PT(h, l, v', r)
             | PT(h, l, v, r) when insIndex = curIndex + v.Length ->
-                let v' = v.AddRight pcLength
-                PT(h, l, v', insMin pcStart pcLength r) |> skew |> split
+                let v' = v.AddRight pcLength pcLines.Length
+                let r' = insMin pcStart pcLength pcLines r
+                PT(h, l, v', r') |> skew |> split
             | PT(h, l, v, r) ->
                 let difference = insIndex - curIndex
                 let rStart = v.Start + difference
                 let rLength = v.Length - difference
-                let l' = insMax v.Start difference l
-                let r' = insMin rStart rLength r
+
+                let (leftLines, rightLines) = splitLines difference v.Lines
+
+                let l' = insMax v.Start difference leftLines l
+                let r' = insMin rStart rLength rightLines r
                 let v' = { v with 
                             Start = pcStart; 
                             Length = pcLength; 
+                            Lines = pcLines;
                             LeftIdx = v.LeftIdx + difference;
                             RightIdx = v.RightIdx + rLength; }
                 PT(h, l', v', r') |> skew |> split
@@ -246,8 +254,8 @@ module PieceTree =
                     let v' = {v' with LeftIdx = size left; RightIdx = size right }
                     PT(h, left, v', right) |> adjust
                 elif middleIsInRange start curIndex finish nodeEndIndex then
-                    let (p1, p2Start, p2Length) = PieceLogic.deleteInRange curIndex start finish v
-                    let newRight = insMin p2Start p2Length right
+                    let (p1, p2Start, p2Length, p2Lines) = PieceLogic.deleteInRange curIndex start finish v
+                    let newRight = insMin p2Start p2Length p2Lines right
                     let v' = {p1 with LeftIdx = size left; RightIdx = size right }
                     PT(h, left, v', newRight) |> skew |> split
                 else
