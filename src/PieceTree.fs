@@ -20,9 +20,9 @@ module private AaTree =
     let inline skew node =
         match node with
         | PT(lvx, PT(lvy, a, ky, b), kx, c) as t when lvx = lvy ->
-            let kx = kx.SetIdx (size b) (size c)
+            let kx = kx.SetData (idxLnSize b) (idxLnSize c)
             let innerNode =  PT(lvx, b, kx, c)
-            let ky = ky.SetIdx (size a) (size innerNode)
+            let ky = ky.SetData (idxLnSize a) (idxLnSize innerNode)
             PT(lvx, a, ky, innerNode)
         | t -> t
 
@@ -30,9 +30,9 @@ module private AaTree =
         match node with
         | PT(lvx, a, kx, PT(lvy, b, ky, PT(lvz, c, kz, d))) as t when lvx = lvy && lvy = lvz -> 
             let right = PT(lvx, c, kz, d)
-            let kx = kx.SetIdx (size a) (size b)
+            let kx = kx.SetData (idxLnSize a) (idxLnSize b)
             let left = PT(lvx, a, kx, b)
-            let ky = ky.SetIdx (size left) (size right)
+            let ky = ky.SetData (idxLnSize left) (idxLnSize right)
             PT(lvx + 1, left, ky, right)
         | t -> t
 
@@ -48,37 +48,41 @@ module private AaTree =
         | PT(lvt, lt, kt, rt) when lvl rt < lvt - 1 && sngl lt -> 
             PT(lvt - 1, lt, kt, rt) |> skew
         | PT(lvt, PT(lv1, a, kl, PT(lvb, lb, kb, rb)), kt, rt) when lvl rt < lvt - 1 -> 
-            let kl = kl.SetIdx (size a) (size lb)
+            let kl = kl.SetData (idxLnSize a) (idxLnSize lb)
             let leftNode = PT(lv1, a, kl, lb)
-            let kt = kt.SetIdx (size rb) (size rt)
+            let kt = kt.SetData (idxLnSize rb) (idxLnSize rt)
             let rightNode = PT(lvt - 1, rb, kt, rt)
-            let kb = kb.SetIdx (size leftNode) (size rightNode)
+            let kb = kb.SetData (idxLnSize leftNode) (idxLnSize rightNode)
             PT(lvb + 1, leftNode, kb, rightNode)
         | PT(lvt, lt, kt, rt) when lvl rt < lvt -> 
             PT(lvt - 1, lt, kt, rt) |> split
         | PT(lvt, lt, kt, PT(lvr, (PT(lva, c, ka, d) as a), kr, b)) ->
-            let kt = kt.SetIdx (size lt) (size c)
+            let kt = kt.SetData (idxLnSize lt) (idxLnSize c)
             let leftNode = PT(lvt - 1, lt, kt, c)
-            let kr = kr.SetIdx (size d) (size b)
+            let kr = kr.SetData (idxLnSize d) (idxLnSize b)
             let rightNode = PT(nlvl a, d, kr, b) |> split
-            let ka = ka.SetIdx (size leftNode) (size rightNode)
+            let ka = ka.SetData (idxLnSize leftNode) (idxLnSize rightNode)
             PT(lva + 1, leftNode, ka, rightNode)
         | _ -> node
 
     let rec splitMax =
         function
         | PT(_, l, v, PE) -> 
+            let (lSize, lLines) = idxLnSize l
             let v = 
                 { v with 
-                    LeftIdx = size l; 
+                    LeftIdx = lSize; 
+                    LeftLn = lLines;
                     RightIdx = 0; }
             l, v
         | PT(h, l, v, r) -> 
             match splitMax r with
             | r', b -> 
-                let v' = { v with RightIdx = size r' }
+                let (r'Size, r'Lines) = idxLnSize r'
+                let v' = { v with RightIdx = r'Size; RightLn = r'Lines; }
                 let tree = PT(h, l, v', r') |> adjust
-                let b' = { b with RightIdx = size tree }
+                let (treeSize, treeLines) = idxLnSize tree
+                let b' = { b with RightIdx = treeSize; RightLn = treeLines }
                 tree, b'
         | _ -> failwith "unexpected splitMax case"
 
@@ -191,36 +195,6 @@ module PieceTree =
     let inline private middleIsInRange start curIndex finish nodeEndIndex =
         start >= curIndex && finish <= nodeEndIndex
 
-    let substring (start: int) (length: int) table =
-        let finish = start + length
-        let rec sub curIndex node acc =
-            match node with
-            | PE -> acc
-            | PT(h, l, v, r) ->
-                let left =
-                    if start < curIndex
-                    then sub (curIndex - nLength l - sizeRight l) l acc
-                    else acc
-
-                let nodeEndIndex = curIndex + v.Length
-                let middle = 
-                    if inRange start curIndex finish nodeEndIndex then
-                        left + PieceLogic.text v table
-                    elif startIsInRange start curIndex finish nodeEndIndex then
-                        left + PieceLogic.textAtStart curIndex finish v table
-                    elif endIsInRange start curIndex finish nodeEndIndex then
-                        left + PieceLogic.textAtEnd curIndex start v table
-                    elif middleIsInRange start curIndex finish nodeEndIndex then
-                        left + PieceLogic.textInRange curIndex start finish v table
-                    else
-                        left
-
-                if finish > nodeEndIndex
-                then sub (nodeEndIndex + sizeLeft r) r middle
-                else middle
-
-        sub (sizeLeft table.Tree) table.Tree ""
-
 
     let delete start length tree =
         let finish = start + length
@@ -263,3 +237,34 @@ module PieceTree =
                     PT(h, left, v', right) |> adjust
                 
         del (sizeLeft tree) tree 
+
+    let substring (start: int) (length: int) table =
+        let finish = start + length
+        let rec sub curIndex node acc =
+            match node with
+            | PE -> acc
+            | PT(h, l, v, r) ->
+                let left =
+                    if start < curIndex
+                    then sub (curIndex - nLength l - sizeRight l) l acc
+                    else acc
+
+                let nodeEndIndex = curIndex + v.Length
+                let middle = 
+                    if inRange start curIndex finish nodeEndIndex then
+                        left + PieceLogic.text v table
+                    elif startIsInRange start curIndex finish nodeEndIndex then
+                        left + PieceLogic.textAtStart curIndex finish v table
+                    elif endIsInRange start curIndex finish nodeEndIndex then
+                        left + PieceLogic.textAtEnd curIndex start v table
+                    elif middleIsInRange start curIndex finish nodeEndIndex then
+                        left + PieceLogic.textInRange curIndex start finish v table
+                    else
+                        left
+
+                if finish > nodeEndIndex
+                then sub (nodeEndIndex + sizeLeft r) r middle
+                else middle
+
+        sub (sizeLeft table.Tree) table.Tree ""
+
