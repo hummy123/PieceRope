@@ -268,6 +268,19 @@ module PieceTree =
 
         sub (sizeLeft table.Tree) table.Tree ""
 
+    (* Delete/substring if-statements adapted to work with lines. *)
+    let inline private lineInRange nodeStartLine searchLine nodeEndLine =
+        nodeStartLine = searchLine && searchLine = nodeEndLine
+
+    let inline private startIsInLine nodeStartLine searchLine nodeEndLine =
+        nodeStartLine = searchLine && searchLine < nodeEndLine
+
+    let inline private endIsInLine nodeStartLine searchLine nodeEndLine =
+        nodeStartLine < searchLine && searchLine = nodeEndLine
+
+    let inline private middleIsInLine nodeStartLine searchLine nodeEndLine =
+        nodeStartLine < searchLine && nodeEndLine > searchLine
+
     let getLine line table =
         let rec get curLine node acc =
             match node with
@@ -280,20 +293,20 @@ module PieceTree =
 
                 let nodeEndLine = curLine + v.Lines.Length
                 let middle =
-                    if inRange line curLine line nodeEndLine then
+                    if lineInRange curLine line nodeEndLine then
                         left + PieceLogic.text v table
-                    elif startIsInRange line curLine line nodeEndLine then
+                    elif startIsInLine curLine line nodeEndLine then
                         let length = v.Lines[0] - 1
                         left + PieceLogic.atStartAndLength v.Start length table
-                    elif endIsInRange line curLine line nodeEndLine then
+                    elif endIsInLine curLine line nodeEndLine then
                         let start = v.Lines[v.Lines.Length - 1] + v.Start
                         let length = start - v.Start
                         left + PieceLogic.atStartAndLength start length table
-                    elif middleIsInRange line curLine line nodeEndLine then
+                    elif middleIsInLine curLine line nodeEndLine then
                         let lineDifference = line - curLine
-                        let lineIndex = Array.findIndex (fun x -> x = lineDifference) v.Lines
-                        let lineFinish = v.Lines[lineIndex + 1] - 1
-                        left + PieceLogic.atStartAndLength lineIndex lineFinish table
+                        let lineStart = v.Lines[lineDifference]
+                        let lineFinish = v.Lines[lineDifference + 1] - 1
+                        left + PieceLogic.atStartAndLength lineStart lineFinish table
                     else
                         left
 
