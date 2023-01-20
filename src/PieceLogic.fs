@@ -29,11 +29,10 @@ module PieceLogic =
     let deleteInRange curIndex start finish (piece: PieceNode) =
         (* p1 retains metadata and p2 is leaf *)
         let p1Length = start - curIndex
-        let p2Start = finish - curIndex
-        let (p1Lines, p2Lines) = deleteLinesInRange p1Length p2Start piece.Lines
+        let p2Start = finish - curIndex + piece.Start
+        let (p1Lines, p2Lines) = deleteLinesInRange (p1Length + piece.Start) p2Start piece.Lines
         let p1 = {piece with Length = p1Length; Lines = p1Lines}
 
-        let p2Start = p2Start + piece.Start
         let p2Length = piece.Length - p2Start
 
         (p1, p2Start, p2Length, p2Lines)
