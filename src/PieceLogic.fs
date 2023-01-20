@@ -23,7 +23,7 @@ module PieceLogic =
             if i < p1Length
             then p1Lines.Add i
             elif i >= p2Start
-            then p2Lines.Add (i - p2Start)
+            then p2Lines.Add (i - p1Length)
         p1Lines.ToArray(), p2Lines.ToArray()
 
     let deleteInRange curIndex start finish (piece: PieceNode) =
