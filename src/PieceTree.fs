@@ -73,17 +73,18 @@ module private AaTree =
                 { v with 
                     LeftIdx = lSize; 
                     LeftLn = lLines;
-                    RightIdx = 0; }
+                    RightIdx = 0;
+                    RightLn = 0; }
             l, v
         | PT(h, l, v, r) -> 
             match splitMax r with
             | r', b -> 
                 let (r'Size, r'Lines) = idxLnSize r'
                 let v' = { v with RightIdx = r'Size; RightLn = r'Lines; }
-                let tree = PT(h, l, v', r') |> adjust
-                let (treeSize, treeLines) = idxLnSize tree
-                let b' = { b with RightIdx = treeSize; RightLn = treeLines }
-                tree, b'
+                let newLeft = PT(h, l, v', r') |> adjust
+                let (treeSize, treeLines) = idxLnSize newLeft
+                let b' = { b with LeftIdx = treeSize; LeftLn = treeLines }
+                newLeft, b'
         | _ -> failwith "unexpected splitMax case"
 
     let rec foldOpt (f: OptimizedClosures.FSharpFunc<_, _, _>) x t =
@@ -156,8 +157,12 @@ module PieceTree =
                 let l' = insMax pcStart pcLength pcLines l
                 PT(h, l', v', r) |> skew |> split
             | PT(h, l, v, r) when insIndex = curIndex + v.Length && isConsecutive v pcStart ->
-                // Todo: Concatente pcLines to this node as well
-                let v' = { v with Length = v.Length + pcLength }
+                let v'Lines = ResizeArray()
+                v'Lines.AddRange v.Lines
+                for i in pcLines do
+                    v'Lines.Add (i + v.Length)
+                let v'Lines = v'Lines.ToArray()
+                let v' = { v with Length = v.Length + pcLength; Lines = v'Lines }
                 PT(h, l, v', r)
             | PT(h, l, v, r) when insIndex = curIndex + v.Length ->
                 let v' = v.AddRight pcLength pcLines.Length
