@@ -12,7 +12,7 @@ let ``Rope.GetLine returns line we inserted`` () =
         let line = PieceRope.getLine i rope
         Assert.Equal(sprintf "%i\n" i, line)
     let line = PieceRope.getLine 10 rope
-    Assert.Equal("\n", line)
+    Assert.Equal("", line)
 
 [<Fact>]
 let ``Rope.GetLine returns whole string when we delete line break at middle.`` () =

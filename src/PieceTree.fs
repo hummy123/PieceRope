@@ -311,10 +311,6 @@ module PieceTree =
                     elif middleIsInLine curLine line nodeEndLine then
                         let lineDifference = line - curLine
                         let lineStart = v.Lines[lineDifference - 1] + 1
-                        let pos1, pos2 = 
-                            if lineDifference = v.Lines.Length - 1
-                            then lineDifference, lineDifference - 1
-                            else lineDifference + 1, lineDifference
                         let lineLength = v.Lines[lineDifference] - lineStart + 1
                         left + PieceLogic.atStartAndLength lineStart lineLength table
                     else
