@@ -10,5 +10,5 @@ module Program =
         let rope = rope.Delete(11, 1)
         let rope = rope.Delete(38, 1) 
 
-        printfn "%s" (rope.GetLine 0)
+        printfn "%s" (rope.GetLine 1)
         0
