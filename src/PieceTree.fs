@@ -301,7 +301,8 @@ module PieceTree =
                     if lineInRange curLine line nodeEndLine then
                         left + PieceLogic.text v table
                     elif startIsInLine curLine line nodeEndLine then
-                        let length = v.Lines[0] + 1 (* + 1 gives us \n in string *)
+                        (* + 1 gives us \n in string and - v.Start takes us to piece offset *)
+                        let length = v.Lines[0] + 1 - v.Start
                         left + PieceLogic.atStartAndLength v.Start length table
                     elif endIsInLine curLine line nodeEndLine then
                         let last = v.Lines[v.Lines.Length - 1]
@@ -324,7 +325,7 @@ module PieceTree =
                     else
                         left
 
-                if line >= curLine
+                if line >= nodeEndLine
                 then get (nodeEndLine + linesLeft r) r middle
                 else middle
 

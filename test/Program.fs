@@ -8,5 +8,5 @@ module Program =
     
         // Delete first line break and see if we can get expected string from result.
         let rope = rope.Delete(11, 1)
-        printfn "%s" (rope.GetLine 1)
+        printfn "%s" (rope.GetLine 0)
         0
