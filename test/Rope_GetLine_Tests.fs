@@ -22,3 +22,23 @@ let ``Rope.GetLine returns whole string when we delete line break at middle.`` (
 
     let rope = rope.Delete(5, 1)
     Assert.Equal("abcdefghij", rope.GetLine 0)
+
+[<Fact>]
+let ``Rope.GetLine returns correct segments when we delete line breaks in complex string`` () =
+    let rope = PieceRope.create "Lorem ipsum\ndolor sit amet,\nconsectetur\nadipiscing elit. \nAenean ornare, \nlacus vitae \ntempor pretium,\nleo nulla\nsollicitudin elit,\nin ultrices mi dui et\nipsum. Cras condimentum\npurus in metus \nsodales tincidunt. Praesent"
+    
+    // Delete first line break and see if we can get expected string from result.
+    let rope = rope.Delete(11, 1)
+    Assert.Equal("Lorem ipsumdolor sit amet,\n", rope.GetLine 0)
+    Assert.Equal("consectetur\n", rope.GetLine 1)
+
+    // Delete third line break.
+    let rope = rope.Delete(38, 1)
+    Assert.Equal("Lorem ipsumdolor sit amet,\n", rope.GetLine 0)
+    Assert.Equal("consecteturadipiscing elit. \n", rope.GetLine 1)
+
+    // Delete fifth line break
+    let rope = rope.Delete(71, 1)
+    Assert.Equal("Lorem ipsumdolor sit amet,\n", rope.GetLine 0)
+    Assert.Equal("consecteturadipiscing elit. \n", rope.GetLine 1)
+    Assert.Equal("Aenean ornare, lacus vitae \n", rope.GetLine 2)

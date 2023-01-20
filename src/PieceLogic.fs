@@ -42,10 +42,13 @@ module PieceLogic =
         let difference = finish - curIndex
         let newStart = piece.Start + difference
         let newLength = piece.Length - difference
-        { piece with Start = newStart; Length = newLength; }
+        let newLines = Array.filter (fun x -> x >= difference) piece.Lines
+        { piece with Start = newStart; Length = newLength; Lines = newLines }
 
     let inline deleteAtEnd curIndex start piece =
-        { piece with Length = start - curIndex }
+        let length = start - curIndex
+        let lines = Array.filter (fun x -> x <= length) piece.Lines
+        { piece with Length = length; Lines = lines }
 
     let inline text piece table =
         substring piece.Start piece.Length table.Buffer

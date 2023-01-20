@@ -201,7 +201,7 @@ module PieceTree =
         let rec del curIndex node =
             match node with
             | PE -> PE
-            | PT(h, l, v, r) as node ->
+            | PT(h, l, v, r) ->
                 let left =
                     if start < curIndex
                     then del (curIndex - nLength l - sizeRight l) l
@@ -217,15 +217,15 @@ module PieceTree =
                     then right
                     else 
                         let (newLeft, newVal) = splitMax left
-                        let v' = {newVal with LeftIdx = size newLeft; RightIdx = size right; }
+                        let v' = newVal.SetData (idxLnSize newLeft) (idxLnSize right) 
                         PT(h, newLeft, v', right) |> adjust
                 elif startIsInRange start curIndex finish nodeEndIndex then
                     let v' = PieceLogic.deleteAtStart curIndex finish v
-                    let v' = { v' with LeftIdx = size left; RightIdx = size right; }
+                    let v' = v'.SetData (idxLnSize left) (idxLnSize right) 
                     PT(h, left, v', right) |> skew |> split
                 elif endIsInRange start curIndex finish nodeEndIndex then
                     let v' = PieceLogic.deleteAtEnd curIndex start v
-                    let v' = {v' with LeftIdx = size left; RightIdx = size right }
+                    let v' = v'.SetData (idxLnSize left) (idxLnSize right) 
                     PT(h, left, v', right) |> adjust
                 elif middleIsInRange start curIndex finish nodeEndIndex then
                     let (p1, p2Start, p2Length, p2Lines) = PieceLogic.deleteInRange curIndex start finish v
@@ -233,7 +233,7 @@ module PieceTree =
                     let v' = p1.SetData (idxLnSize left) (idxLnSize newRight) 
                     PT(h, left, v', newRight) |> skew |> split
                 else
-                    let v' = {v with LeftIdx = size left; RightIdx = size right }
+                    let v' = v.SetData (idxLnSize left) (idxLnSize right) 
                     PT(h, left, v', right) |> adjust
                 
         del (sizeLeft tree) tree 
