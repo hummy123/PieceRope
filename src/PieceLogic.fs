@@ -16,7 +16,7 @@ module PieceLogic =
             else arrRight.Add (i - difference)
         arrLeft.ToArray(), arrRight.ToArray()
 
-    let deleteLinesInRange p1Length p2Start lines =
+    let inline deleteLinesInRange p1Length p2Start lines =
         let p1Lines = ResizeArray()
         let p2Lines = ResizeArray()
         for i in lines do
@@ -33,7 +33,7 @@ module PieceLogic =
         let (p1Lines, p2Lines) = deleteLinesInRange (p1Length + piece.Start) p2Start piece.Lines
         let p1 = {piece with Length = p1Length; Lines = p1Lines}
 
-        let p2Length = piece.Length - p2Start
+        let p2Length = piece.Length - (finish - curIndex)
 
         (p1, p2Start, p2Length, p2Lines)
 
