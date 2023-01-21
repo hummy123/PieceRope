@@ -69,7 +69,6 @@ module Tree =
                 elif start >= curIndex && finish <= nextIndex then
                     (* Range is within node. *)
                     let strStart = start - curIndex
-                    let length = finish - start
                     for i in v.String.Substring(strStart, length) do
                         acc.Add i
                 elif finish < nextIndex && finish >= curIndex then

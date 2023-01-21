@@ -16,7 +16,18 @@ let ``Rope.GetLine returns line we inserted`` () =
     Assert.Equal("", line)
 
 (* Get line under insert tests. *)
-
+[<Fact>]
+let ``Rope.GetLine returns two strings when we insert line break at middle.`` () = 
+    let str = "abcdefghij"
+    let rope = PieceRope.create str
+    
+    let rope = rope.Insert(4, "\n")
+    let str = str.Insert(4, "\n")
+    let strLines = str.Split("\n")
+    
+    Assert.Equal(str, rope.Text())
+    Assert.Equal(strLines[0] + "\n", rope.GetLine 0)
+    Assert.Equal(strLines[1], rope.GetLine 1)
 
 (* Get line under delete tests. *)
 [<Fact>]
