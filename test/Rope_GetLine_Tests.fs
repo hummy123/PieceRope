@@ -5,6 +5,7 @@ open Xunit
 open PieceRope
 open PieceRope.PieceRope
 
+(* Get line under create tests. *)
 [<Fact>]
 let ``Rope.GetLine returns line we inserted`` () =
     let rope = PieceRope.create "0\n1\n2\n3\n4\n5\n6\n7\n8\n9\n"
@@ -14,6 +15,10 @@ let ``Rope.GetLine returns line we inserted`` () =
     let line = PieceRope.getLine 10 rope
     Assert.Equal("", line)
 
+(* Get line under insert tests. *)
+
+
+(* Get line under delete tests. *)
 [<Fact>]
 let ``Rope.GetLine returns whole string when we delete line break at middle.`` () =
     let rope = PieceRope.create "abcde\nfghij"
