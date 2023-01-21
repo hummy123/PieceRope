@@ -78,3 +78,59 @@ let ``Rope.GetLine returns correct segments when we delete multiple line breaks 
     Assert.Equal("ipsum. Cras condimentum\n", rope.GetLine 6)
     Assert.Equal("purus in metus \n", rope.GetLine 7)
     Assert.Equal("sodales tincidunt. Praesent", rope.GetLine 8)
+
+[<Fact>]
+let ``Rope.GetLine returns correct segments when we delete multiple line breaks at last half`` () =
+    let rope = PieceRope.create "Lorem ipsum\ndolor sit amet,\nconsectetur\nadipiscing elit. \nAenean ornare, \nlacus vitae \ntempor pretium,\nleo nulla\nsollicitudin elit,\nin ultrices mi dui et\nipsum. Cras condimentum\npurus in metus \nsodales tincidunt. Praesent"
+
+    // delete "\npurus in metus \n"
+    let rope = rope.Delete(177, 17)
+    Assert.Equal("ipsum. Cras condimentumsodales tincidunt. Praesent", rope.GetLine 10)
+
+    // delete " elit,\nin "
+    let rope = rope.Delete(123, 9)
+    Assert.Equal("sollicitudin ultrices mi dui et\n", rope.GetLine 8)
+
+    // delete "\ntempor pretium,\nleo nulla"
+    let rope = rope.Delete(83, 25)
+
+    // assert that all lines are as expected
+    Assert.Equal("Lorem ipsum\n", rope.GetLine 0)
+    Assert.Equal("dolor sit amet,\n", rope.GetLine 1)
+    Assert.Equal("consectetur\n", rope.GetLine 2)
+    Assert.Equal("adipiscing elit. \n", rope.GetLine 3)
+    Assert.Equal("Aenean ornare, \n", rope.GetLine 4)
+    Assert.Equal("lacus vitulla\n", rope.GetLine 5)
+    Assert.Equal("sollicitudin ultrices mi dui et\n", rope.GetLine 6)
+    Assert.Equal("ipsum. Cras condimentumsodales tincidunt. Praesent", rope.GetLine 7)
+
+[<Fact>]
+let ``Rope.GetLine returns correct segments when we delete multiple line breaks in middle`` () =
+    let str = "Lorem ipsum\ndolor sit amet,\nconsectetur\nadipiscing elit. \nAenean ornare, \nlacus vitae \ntempor pretium,\nleo nulla\nsollicitudin elit,\nin ultrices mi dui et\nipsum. Cras condimentum\npurus in metus \nsodales tincidunt. Praesent"
+    let rope = PieceRope.create str
+
+    // delete "Aenean ornare, \n"
+    let rope = rope.Delete(58, 16)
+    let str = str.Remove(58, 16)
+    Assert.Equal(str, rope.Text())
+
+    // delete "tempor pretium,\nleo nulla\n"
+    let rope = rope.Delete(71, 26)
+    let str = str.Remove(71, 26)
+    Assert.Equal(str, rope.Text())
+
+    //delete "dolor sit amet,\n"
+    let rope = rope.Delete(12, 16)
+    let str = str.Remove(12, 16)
+    Assert.Equal(str, rope.Text())
+    
+    // test we retrieve all lines as expected
+    Assert.Equal("Lorem ipsum\n", rope.GetLine 0)
+    Assert.Equal("consectetur\n", rope.GetLine 1)
+    Assert.Equal("adipiscing elit. \n", rope.GetLine 2)
+    Assert.Equal("lacus vitae \n", rope.GetLine 3)
+    Assert.Equal("sollicitudin elit,\n", rope.GetLine 4)
+    Assert.Equal("in ultrices mi dui et\n", rope.GetLine 5)
+    Assert.Equal("ipsum. Cras condimentum\n", rope.GetLine 6)
+    Assert.Equal("purus in metus \n", rope.GetLine 7)
+    Assert.Equal("sodales tincidunt. Praesent", rope.GetLine 8)
