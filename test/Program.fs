@@ -24,33 +24,15 @@ let lengthGen min max = Gen.choose(min, max) |> Gen.sample 1 1 |> List.head
 module Program =
     [<EntryPoint>]
     let main _ =  
-        let mutable testString = initString
-        let mutable testRope = initRope
+        let testString = initString
+        let testRope = initRope
 
-        for j in [0..100] do
-            printfn "\nrestart"
-            testString <- initString
-            testRope <- initRope
-            for i in [0..20] do
-                // Generate inputs
-                let insStr = "\n"
-                let idx = idxGen testString.Length
-                testString <- testString.Insert(idx, insStr)
-                testRope <- testRope.Insert(idx, insStr)
-            
-                printfn "idx: %A" idx
+        let testString = testString.Insert(221, "\n")
+        let testRope = testRope.Insert(221, "\n")
 
-                // Split strings by \n so we get number of lines.
-                let spliString = testString.Split("\n")
+        let splitstr = testString.Split("\n")
+        for i = 0 to splitstr.Length - 2 do
+            printfn "is line %i same? %A" i (splitstr[i] + "\n" = testRope.GetLine i)
 
-                // Loop over every line number and check if they are same in both.
-                // We add \n to the plain string version because we split by \n before.
-                for i in [0..spliString.Length - 2] do
-                    if spliString[i] + "\n" <> testRope.GetLine i
-                    then printfn "error in loop"
-
-                // Test last line is same in both.
-                let lastLineNum = spliString.Length - 1
-                if spliString[lastLineNum] <> testRope.GetLine lastLineNum
-                then printfn "error in last line"
+        printfn "is last same? %A" (splitstr[13] = testRope.GetLine 13)
         0
