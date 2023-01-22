@@ -1,38 +1,4 @@
-open FsCheck
-open FsCheck.Xunit
-open PieceRope
-open PieceRope.PieceRope
-
-// Initial data
-let lorem = "Lorem ipsum\ndolor sit amet,\nconsectetur\nadipiscing elit. \nAenean ornare, \nlacus vitae \ntempor pretium,\nleo nulla\nsollicitudin elit,\nin ultrices mi dui et\nipsum. Cras condimentum\npurus in metus \nsodales tincidunt. Praesent"
-let initRope = PieceRope.create lorem
-let initString = lorem
-
-// Generators
-let charGen = 
-    let chars = Gen.sample 100 100 Arb.generate<char> |> Array.ofList
-    new string(chars)
-
-let idxGen maxLen = Gen.choose(0, maxLen) |> Gen.sample 1 1 |> List.head
-let lengthGen min max = Gen.choose(min, max) |> Gen.sample 1 1 |> List.head
-
-// Smallest failing example:
-// restart
-// idx: 221
-// Unhandled exception. System.ArgumentOutOfRangeException: startIndex cannot be larger than length of string. (Parameter 'startIndex')
-
 module Program =
     [<EntryPoint>]
     let main _ =  
-        let testString = initString
-        let testRope = initRope
-
-        let testString = testString.Insert(221, "\n")
-        let testRope = testRope.Insert(221, "\n")
-
-        let splitstr = testString.Split("\n")
-        for i = 0 to splitstr.Length - 2 do
-            printfn "is line %i same? %A" i (splitstr[i] + "\n" = testRope.GetLine i)
-
-        printfn "is last same? %A" (splitstr[13] = testRope.GetLine 13)
         0
