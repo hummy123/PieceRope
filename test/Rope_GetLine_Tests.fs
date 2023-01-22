@@ -29,6 +29,25 @@ let ``Rope.GetLine returns two strings when we insert line break at middle.`` ()
     Assert.Equal(strLines[0] + "\n", rope.GetLine 0)
     Assert.Equal(strLines[1], rope.GetLine 1)
 
+[<Fact>]
+let ``Rope.GetLine splits lines correctly when we insert into middle of piece`` () =
+    // Initial data
+    let initString = "Lorem ipsum\ndolor sit amet,\nconsectetur\nadipiscing elit. \nAenean ornare, \nlacus vitae \ntempor pretium,\nleo nulla\nsollicitudin elit,\nin ultrices mi dui et\nipsum. Cras condimentum\npurus in metus \nsodales tincidunt. Praesent"
+    let initRope = PieceRope.create initString
+
+    let testRope = initRope.Insert(27, "\n")
+    let testString = initString.Insert(27, "\n")
+    let testRope = testRope.Insert(207, "\n")
+    let testString = testString.Insert(207, "\n")
+
+    let spliString = testString.Split("\n")
+
+    for i = 0 to spliString.Length - 2 do
+        Assert.Equal(spliString[i] + "\n", testRope.GetLine i)
+
+    let lastLineIdx = spliString.Length - 1
+    Assert.Equal(spliString[lastLineIdx], testRope.GetLine lastLineIdx)
+
 (* Get line under delete tests. *)
 [<Fact>]
 let ``Rope.GetLine returns whole string when we delete line break at middle.`` () =

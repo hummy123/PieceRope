@@ -7,11 +7,11 @@ open PieceTree.Node
 module PieceLogic =
     /// Returns two arrays containing the lines in a PieceNode, split at a specific position.
     /// Intended to be used when we insert into a piece.
-    let inline splitLines difference lines =
+    let inline splitLines rstart lines =
         let arrLeft = ResizeArray()
         let arrRight = ResizeArray()
         for i in lines do
-            if i < difference (* not sure if it should be < or <= *)
+            if i < rstart (* not sure if it should be < or <= *)
             then arrLeft.Add i
             else arrRight.Add i
         arrLeft.ToArray(), arrRight.ToArray()

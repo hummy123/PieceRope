@@ -173,7 +173,7 @@ module PieceTree =
                 let rStart = v.Start + difference
                 let rLength = v.Length - difference
 
-                let (leftLines, rightLines) = splitLines difference v.Lines
+                let (leftLines, rightLines) = splitLines rStart v.Lines
 
                 let l' = insMax v.Start difference leftLines l
                 let r' = insMin rStart rLength rightLines r
