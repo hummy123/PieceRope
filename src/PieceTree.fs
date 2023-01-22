@@ -182,7 +182,9 @@ module PieceTree =
                             Length = pcLength; 
                             Lines = pcLines;
                             LeftIdx = v.LeftIdx + difference;
-                            RightIdx = v.RightIdx + rLength; }
+                            LeftLn = v.LeftLn + leftLines.Length;
+                            RightIdx = v.RightIdx + rLength; 
+                            RightLn = v.RightLn + rightLines.Length; }
                 PT(h, l', v', r') |> skew |> split
 
         ins (sizeLeft tree) tree

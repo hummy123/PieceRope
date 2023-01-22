@@ -6,18 +6,18 @@ open PieceTree.Types
 open PieceTree
 
 module PieceRope = 
-    let inline findLineBreaks (string: string) =
+    let inline findLineBreaks (string: string) pcStart =
         let arr = ResizeArray()
         for i = 0 to string.Length - 1 do
             if string[i] = '\n' || string[i] = '\r'
-            then arr.Add i
+            then arr.Add (i + pcStart)
         arr.ToArray()
 
     let empty = { Tree = PieceTree.Types.PE; Buffer = Buffer.Tree.empty }
 
-    let inline insert index (string: string) piecerope =
+    let insert index (string: string) piecerope =
         let pcStart = size piecerope.Buffer
-        let pcLines = findLineBreaks string
+        let pcLines = findLineBreaks string pcStart
         let buffer = Buffer.Tree.append string piecerope.Buffer
         let pt = PieceTree.insert index pcStart string.Length pcLines piecerope.Tree
         { Tree = pt; Buffer = buffer }
