@@ -230,7 +230,10 @@ module PieceTree =
                         let v' = newVal.SetData (idxLnSize newLeft) (idxLnSize right) 
                         PT(h, newLeft, v', right) |> adjust
                 elif startIsInRange start curIndex finish nodeEndIndex then
-                    let (newStart, newLength, newLines) = PieceLogic.deleteAtStart curIndex finish v
+                    let difference = finish - curIndex
+                    let newStart = v.Start + difference
+                    let newLength = v.Length - difference
+                    let newLines = Array.filter (fun x -> x >= difference) v.Lines
                     let (leftIdx, leftLns) = idxLnSize left
                     let (rightIdx, rightLns) = idxLnSize right
                     let v' = { v with 
@@ -243,7 +246,8 @@ module PieceTree =
                                 RightLn = rightLns; }                    
                     PT(h, left, v', right) |> skew |> split
                 elif endIsInRange start curIndex finish nodeEndIndex then
-                    let (length, lines) = PieceLogic.deleteAtEnd curIndex start v
+                    let length = start - curIndex
+                    let lines = Array.filter (fun x -> x <= length) v.Lines
                     let (leftIdx, leftLns) = idxLnSize left
                     let (rightIdx, rightLns) = idxLnSize right
                     let v' = { v with
@@ -255,8 +259,13 @@ module PieceTree =
                                 RightLn = rightLns; }
                     PT(h, left, v', right) |> adjust
                 elif middleIsInRange start curIndex finish nodeEndIndex then
-                    let (p1Length, p1Lines, p2Start, p2Length, p2Lines)
-                        = PieceLogic.deleteInRange curIndex start finish v
+                    (* p1 retains metadata and p2 is leaf *)
+                    let finishDifference = finish - curIndex
+                    let p1Length = start - curIndex
+                    let p2Start = finishDifference + v.Start
+                    let (p1Lines, p2Lines) = deleteLinesInRange (p1Length + v.Start) p2Start v.Lines
+
+                    let p2Length = v.Length - finishDifference
                     let newRight = insMin p2Start p2Length p2Lines right
                     let (leftIdx, leftLns) = idxLnSize left
                     let (rightIdx, rightLns) = idxLnSize newRight
