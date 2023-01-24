@@ -14,6 +14,7 @@ module PieceLogic =
             if i < rstart (* not sure if it should be < or <= *)
             then arrLeft.Add i
             else arrRight.Add i
+
         arrLeft.ToArray(), arrRight.ToArray()
 
     let inline deleteLinesInRange p1Length p2Start lines =
@@ -26,7 +27,7 @@ module PieceLogic =
             then p2Lines.Add i
         p1Lines.ToArray(), p2Lines.ToArray()
 
-    let deleteInRange curIndex start finish (piece: PieceNode) =
+    let inline deleteInRange curIndex start finish (piece: PieceNode) =
         (* p1 retains metadata and p2 is leaf *)
         let finishDifference = finish - curIndex
         let p1Length = start - curIndex
