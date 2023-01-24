@@ -33,11 +33,10 @@ module PieceLogic =
         let p1Length = start - curIndex
         let p2Start = finishDifference + piece.Start
         let (p1Lines, p2Lines) = deleteLinesInRange (p1Length + piece.Start) p2Start piece.Lines
-        let p1 = {piece with Length = p1Length; Lines = p1Lines}
 
         let p2Length = piece.Length - finishDifference
 
-        (p1, p2Start, p2Length, p2Lines)
+        (p1Length, p1Lines, p2Start, p2Length, p2Lines)
 
     let inline deleteAtStart curIndex finish piece =
         let difference = finish - curIndex

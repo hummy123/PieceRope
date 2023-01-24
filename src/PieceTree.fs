@@ -251,9 +251,18 @@ module PieceTree =
                                 RightLn = rightLns; }
                     PT(h, left, v', right) |> adjust
                 elif middleIsInRange start curIndex finish nodeEndIndex then
-                    let (p1, p2Start, p2Length, p2Lines) = PieceLogic.deleteInRange curIndex start finish v
+                    let (p1Length, p1Lines, p2Start, p2Length, p2Lines)
+                        = PieceLogic.deleteInRange curIndex start finish v
                     let newRight = insMin p2Start p2Length p2Lines right
-                    let v' = p1.SetData (idxLnSize left) (idxLnSize newRight) 
+                    let (leftIdx, leftLns) = idxLnSize left
+                    let (rightIdx, rightLns) = idxLnSize newRight
+                    let v' = { v with
+                                Length = p1Length;
+                                Lines = p1Lines; 
+                                LeftIdx = leftIdx;
+                                LeftLn = leftLns;
+                                RightIdx = rightIdx;
+                                RightLn = rightLns; }
                     PT(h, left, v', newRight) |> skew |> split
                 else
                     let v' = v.SetData (idxLnSize left) (idxLnSize right) 
