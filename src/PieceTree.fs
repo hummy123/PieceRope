@@ -226,12 +226,29 @@ module PieceTree =
                         let v' = newVal.SetData (idxLnSize newLeft) (idxLnSize right) 
                         PT(h, newLeft, v', right) |> adjust
                 elif startIsInRange start curIndex finish nodeEndIndex then
-                    let v' = PieceLogic.deleteAtStart curIndex finish v
-                    let v' = v'.SetData (idxLnSize left) (idxLnSize right) 
+                    let (newStart, newLength, newLines) = PieceLogic.deleteAtStart curIndex finish v
+                    let (leftIdx, leftLns) = idxLnSize left
+                    let (rightIdx, rightLns) = idxLnSize right
+                    let v' = { v with 
+                                Start = newStart; 
+                                Length = newLength;
+                                Lines = newLines;
+                                LeftIdx = leftIdx;
+                                LeftLn = leftLns;
+                                RightIdx = rightIdx;
+                                RightLn = rightLns; }                    
                     PT(h, left, v', right) |> skew |> split
                 elif endIsInRange start curIndex finish nodeEndIndex then
-                    let v' = PieceLogic.deleteAtEnd curIndex start v
-                    let v' = v'.SetData (idxLnSize left) (idxLnSize right) 
+                    let (length, lines) = PieceLogic.deleteAtEnd curIndex start v
+                    let (leftIdx, leftLns) = idxLnSize left
+                    let (rightIdx, rightLns) = idxLnSize right
+                    let v' = { v with
+                                Length = length;
+                                Lines = lines; 
+                                LeftIdx = leftIdx;
+                                LeftLn = leftLns; 
+                                RightIdx = rightIdx;
+                                RightLn = rightLns; }
                     PT(h, left, v', right) |> adjust
                 elif middleIsInRange start curIndex finish nodeEndIndex then
                     let (p1, p2Start, p2Length, p2Lines) = PieceLogic.deleteInRange curIndex start finish v
