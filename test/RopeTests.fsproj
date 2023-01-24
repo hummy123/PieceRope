@@ -32,6 +32,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\CrdtBenchmarks\PieceRopeCrdtBenchmarks.csproj" />
     <ProjectReference Include="..\src\PieceRope.fsproj" />
   </ItemGroup>
 

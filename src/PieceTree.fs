@@ -141,32 +141,36 @@ module PieceTree =
         v.Start + v.Length = pcStart
 
     let insert insIndex pcStart pcLength pcLines tree =
-        let rec ins curIndex node = 
+        let rec ins curIndex node cont = 
             match node with
-            | PE -> PT(1, PE, Node.create pcStart pcLength pcLines, PE)
+            | PE -> PT(1, PE, Node.create pcStart pcLength pcLines, PE) |> cont
             | PT(h, l, v, r) when insIndex < curIndex ->
                 let nextIndex = curIndex - nLength l - sizeRight l
                 let v' = v.AddLeft pcLength pcLines.Length
-                PT(h, ins nextIndex l, v', r) |> skew |> split
+                ins nextIndex l (fun l' ->
+                    PT(h, l', v', r) |> skew |> split |> cont
+                )
             | PT(h, l, v, r) when insIndex > curIndex + v.Length ->
                 let nextIndex = curIndex + v.Length + sizeLeft r
                 let v' = v.AddRight pcLength pcLines.Length
-                PT(h, l, v', ins nextIndex r) |> skew |> split
+                ins nextIndex r (fun r' ->
+                    PT(h, l, v', r') |> skew |> split |> cont
+                )
             | PT(h, l, v, r) when insIndex = curIndex ->
                 let v' = v.AddLeft pcLength pcLines.Length
                 let l' = insMax pcStart pcLength pcLines l
-                PT(h, l', v', r) |> skew |> split
+                PT(h, l', v', r) |> skew |> split |> cont
             | PT(h, l, v, r) when insIndex = curIndex + v.Length && isConsecutive v pcStart ->
                 let v'Lines = ResizeArray()
                 v'Lines.AddRange v.Lines
                 v'Lines.AddRange pcLines
                 let v'Lines = v'Lines.ToArray()
                 let v' = { v with Length = v.Length + pcLength; Lines = v'Lines }
-                PT(h, l, v', r)
+                PT(h, l, v', r) |> cont
             | PT(h, l, v, r) when insIndex = curIndex + v.Length ->
                 let v' = v.AddRight pcLength pcLines.Length
                 let r' = insMin pcStart pcLength pcLines r
-                PT(h, l, v', r') |> skew |> split
+                PT(h, l, v', r') |> skew |> split |> cont
             | PT(h, l, v, r) ->
                 let difference = insIndex - curIndex
                 let rStart = v.Start + difference
@@ -184,9 +188,9 @@ module PieceTree =
                             LeftLn = v.LeftLn + leftLines.Length;
                             RightIdx = v.RightIdx + rLength; 
                             RightLn = v.RightLn + rightLines.Length; }
-                PT(h, l', v', r') |> skew |> split
+                PT(h, l', v', r') |> skew |> split |> cont
 
-        ins (sizeLeft tree) tree
+        ins (sizeLeft tree) tree topLevelCont
 
     (* Repeated if-statements used in both delete and substring. *)
     let inline private inRange start curIndex finish nodeEndIndex =
