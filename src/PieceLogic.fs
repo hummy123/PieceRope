@@ -15,18 +15,28 @@ module PieceLogic =
             then arrLeft.Add i
             else arrRight.Add i
 
-        arrLeft.ToArray(), arrRight.ToArray()
+        let arrLeft =
+            if arrLeft.Count = 0
+            then None
+            else arrLeft.ToArray() |> Some
+
+        let arrRight =
+            if arrRight.Count = 0
+            then None
+            else arrRight.ToArray() |> Some
+
+        arrLeft, arrRight
 
     let inline deleteLinesInRange p1Length p2Start (lines: int array) =
         let p1Lines = 
             match Array.tryFindIndex (fun x -> x >= p1Length) lines with
-            | Some x -> lines[.. x - 1]
-            | None -> [||]
+            | Some x -> Some lines[.. x - 1]
+            | None -> None
 
         let p2Lines =
             match Array.tryFindIndex (fun x -> x >= p2Start) lines with
-            | Some x -> lines[x..]
-            | None -> [||]
+            | Some x -> Some lines[x..]
+            | None -> None
         
         p1Lines, p2Lines
 
