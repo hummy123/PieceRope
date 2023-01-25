@@ -51,7 +51,7 @@ module PieceLogic =
             | Some x ->
                 let p1l, p2l = 
                     deleteLinesInRange (p1Length + piece.Start) p2Start x
-                Some(p1l), Some(p2l)
+                p1l, p2l
 
         let p2Length = piece.Length - finishDifference
 

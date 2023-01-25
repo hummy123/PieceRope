@@ -183,15 +183,15 @@ module PieceTree =
                     match v.Lines with
                     | Some x -> 
                         let left, right = splitLines rStart x
-                        let left, leftLns = 
-                            match left.Length with
-                            | 0 -> None, 0
-                            | x -> Some left, left.Length
+                        let leftLns = 
+                            match left with
+                            | Some x -> x.Length
+                            | None -> 0
 
-                        let right, rightLns =
-                            match right.Length with
-                            | 0 -> None, 0
-                            | x -> Some right, right.Length
+                        let rightLns =
+                            match right with
+                            | Some x -> x.Length
+                            | None -> 0
                         left, leftLns, right, rightLns
                     | None -> None, 0, None, 0
 

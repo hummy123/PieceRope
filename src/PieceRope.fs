@@ -48,7 +48,7 @@ module PieceRope =
         insert 0 string empty
 
     let inline delete startIndex length piecerope =
-        let tree = PieceTree.PieceTree.delete startIndex length piecerope.Tree
+        let tree = PieceTree(**).PieceTree.delete startIndex length piecerope.Tree
         { Tree = tree; Buffer = piecerope.Buffer }
 
     let inline substring startIndex length piecerope =
