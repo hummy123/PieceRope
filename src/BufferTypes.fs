@@ -9,4 +9,4 @@ module Types =
 
     type BufferTree =
         | BE
-        | BT of int * BufferTree * BufferNode * BufferTree
+        | BT of int * BufferTree * int * string * int * BufferTree

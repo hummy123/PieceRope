@@ -8,21 +8,17 @@ open Data
 module private AaTree =
     let inline skew node =
         match node with
-        | BT(lvx, BT(lvy, a, ky, b), kx, c) as t when lvx = lvy ->
-            let kx = kx.SetIdx (size b) (size c)
-            let innerNode =  BT(lvx, b, kx, c)
-            let ky = ky.SetIdx (size a) (size innerNode)
-            BT(lvx, a, ky, innerNode)
+        | BT(lvx, BT(lvy, a, lky, ky, rky, b), lkx, kx, rkx, c) as t when lvx = lvy ->
+            let innerNode =  BT(lvx, b, rky, kx, rkx, c)
+            BT(lvx, a, lky, ky, size innerNode, innerNode)
         | t -> t
 
     let inline split node =
         match node with
-        | BT(lvx, a, kx, BT(lvy, b, ky, BT(lvz, c, kz, d))) as t when lvx = lvy && lvy = lvz -> 
-            let right = BT(lvx, c, kz, d)
-            let kx = kx.SetIdx (size a) (size b)
-            let left = BT(lvx, a, kx, b)
-            let ky = ky.SetIdx (size left) (size right)
-            BT(lvx + 1, left, ky, right)
+        | BT(lvx, a, lkx, kx, rkx, BT(lvy, b, lky, ky, rky, BT(lvz, c, lkz, kz, rkz, d))) as t when lvx = lvy && lvy = lvz -> 
+            let right = BT(lvx, c, lkz, kz, rkz, d)
+            let left = BT(lvx, a, lkx, kx, lky, b)
+            BT(lvx + 1, left, size left, ky, size right, right)
         | t -> t
 
 open AaTree
@@ -39,11 +35,10 @@ module Tree =
     let append string tree = 
         let rec insMax node cont =
             match node with
-            | BE -> BT(1, BE, Node.create string, BE) |> cont
-            | BT(h, l, v, r) -> 
+            | BE -> BT(1, BE, 0, string, 0, BE) |> cont
+            | BT(h, l, lm, v, rm, r) -> 
                 insMax r (fun r' ->
-                    let v = v.AddRight string.Length
-                    BT(h, l, v, r')
+                    BT(h, l, lm, v, rm + string.Length, r')
                     |> skew |> split |> cont
                 )
         insMax tree topLevelCont
@@ -56,29 +51,29 @@ module Tree =
         let rec sub curIndex node (acc: string) =
             match node with
             | BE -> acc
-            | BT(h, l, v, r) ->
+            | BT(h, l, lm, v, rm, r) ->
                 let left = 
                     if start < curIndex
                     then sub (curIndex - stringLength l - sizeRight l) l acc
                     else acc
                 
-                let nextIndex = curIndex + v.String.Length
+                let nextIndex = curIndex + v.Length
                 let middle =
                     if start <= curIndex && finish >= nextIndex then 
                         (* Node is fully in range. *)
-                        left + v.String
+                        left + v
                     elif start >= curIndex && finish <= nextIndex then
                         (* Range is within node. *)
                         let strStart = start - curIndex
-                        left + v.String.Substring(strStart, length)
+                        left + v.Substring(strStart, length)
                     elif finish < nextIndex && finish >= curIndex then
                         (* Start of node is within range. *)
                         let length = finish - curIndex
-                        left + v.String.Substring(0, length)
+                        left + v.Substring(0, length)
                     elif start > curIndex && start <= nextIndex then
                         (* End of node is within range. *)
                         let strStart = start - curIndex
-                        left + v.String[strStart..]
+                        left + v[strStart..]
                     else
                         left
 
