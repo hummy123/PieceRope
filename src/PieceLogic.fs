@@ -35,7 +35,13 @@ module PieceLogic =
         let finishDifference = finish - curIndex
         let p1Length = start - curIndex
         let p2Start = finishDifference + piece.Start
-        let (p1Lines, p2Lines) = deleteLinesInRange (p1Length + piece.Start) p2Start piece.Lines
+        let p1Lines, p2Lines =
+            match piece.Lines with
+            | None -> None, None
+            | Some x ->
+                let p1l, p2l = 
+                    deleteLinesInRange (p1Length + piece.Start) p2Start x
+                Some(p1l), Some(p2l)
 
         let p2Length = piece.Length - finishDifference
 
@@ -45,12 +51,18 @@ module PieceLogic =
         let difference = finish - curIndex
         let newStart = piece.Start + difference
         let newLength = piece.Length - difference
-        let newLines = Array.filter (fun x -> x >= difference) piece.Lines
+        let newLines =
+            match piece.Lines with
+            | None -> None
+            | Some x -> Some(Array.filter (fun x -> x >= difference) x)
         (newStart, newLength, newLines)
 
     let inline deleteAtEnd curIndex start piece =
         let length = start - curIndex
-        let lines = Array.filter (fun x -> x <= length) piece.Lines
+        let lines = 
+            match piece.Lines with
+            | None -> None
+            | Some x -> Some (Array.filter (fun x -> x <= length) x)
         (length, lines)
 
     let inline text piece table =

@@ -8,7 +8,9 @@ open PieceTree
 module PieceRope = 
     let rec findLineBreaksRec (string: string) strLengthMinus1 pcStart pos (acc: ResizeArray<int>) =
         if pos > strLengthMinus1 then
-            acc.ToArray()
+            if acc.Count > 0 
+                then Some <| acc.ToArray()
+                else None
         else
             let cur = string[pos]
             if cur = '\n' then
@@ -17,7 +19,9 @@ module PieceRope =
             elif cur = '\r' then
                 acc.Add (pos + pcStart)
                 if pos = strLengthMinus1 then
-                    acc.ToArray()
+                    if acc.Count > 0 
+                        then Some <| acc.ToArray()
+                        else None
                 else
                     let next = string[pos + 1]
                     if next = '\n' then
@@ -32,8 +36,12 @@ module PieceRope =
     let inline insert index (string: string) piecerope =
         let pcStart = size piecerope.Buffer
         let pcLines = findLineBreaksRec string (string.Length - 1) pcStart 0 (ResizeArray())
+        let pcLineCount =
+            match pcLines with
+            | Some x -> x.Length
+            | _ -> 0
         let buffer = Buffer.Tree.append string piecerope.Buffer
-        let pt = PieceTree.insert index pcStart string.Length pcLines piecerope.Tree
+        let pt = PieceTree.insert index pcStart string.Length pcLines pcLineCount piecerope.Tree
         { Tree = pt; Buffer = buffer }
 
     let inline create string =

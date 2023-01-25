@@ -3,6 +3,11 @@
 open PieceTree.Types
 
 module Data = 
+    let inline lineArrLength (lines: int array option) =
+        match lines with
+        | Some x -> x.Length
+        | None -> 0
+
     let inline nLength node = 
         match node with
         | PE -> 0
@@ -11,7 +16,7 @@ module Data =
     let inline nLines node =
         match node with
         | PE -> 0
-        | PT(h, l, v, r) -> v.Lines.Length
+        | PT(h, l, v, r) -> lineArrLength v.Lines
 
     let inline size node =
         match node with
@@ -22,7 +27,7 @@ module Data =
         match node with
         | PE -> 0, 0
         | PT(h, l, v, r) -> v.LeftIdx + v.RightIdx + v.Length,
-                            v.LeftLn + v.RightLn + v.Lines.Length
+                            v.LeftLn + v.RightLn + lineArrLength v.Lines
 
     let inline stringLength node =
         match node with

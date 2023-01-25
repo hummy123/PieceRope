@@ -10,7 +10,7 @@ module Types =
         RightIdx: int;
         LeftLn: int;
         RightLn: int;
-        Lines: int array;
+        Lines: int array option;
     }
 
     type PieceTree =

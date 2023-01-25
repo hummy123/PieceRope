@@ -119,7 +119,7 @@ module PieceTree =
             | PE -> PT(1, PE, Node.create pcStart pcLength pcLines, PE) |> cont
             | PT(h, l, v, r) ->
                 min l (fun l' ->
-                    let v = v.AddLeft pcLength pcLines.Length
+                    let v = v.AddLeft pcLength (lineArrLength pcLines)
                     PT(h, l', v, r)
                     |> skew |> split |> cont
                 )
@@ -131,7 +131,7 @@ module PieceTree =
             | PE -> PT(1, PE, Node.create pcStart pcLength pcLines, PE) |> cont
             | PT(h, l, v, r) ->
                 max r (fun r' ->
-                    let v = v.AddRight pcLength pcLines.Length
+                    let v = v.AddRight pcLength (lineArrLength pcLines)
                     PT(h, l, v, r')
                     |> skew |> split |> cont
                 )
@@ -140,32 +140,38 @@ module PieceTree =
     let inline isConsecutive (v: PieceNode) pcStart =
         v.Start + v.Length = pcStart
 
-    let insert insIndex pcStart pcLength pcLines tree =
+    let insert insIndex pcStart pcLength pcLines pcLineCount tree =
         let rec ins curIndex node cont = 
             match node with
             | PE -> PT(1, PE, Node.create pcStart pcLength pcLines, PE) |> cont
             | PT(h, l, v, r) when insIndex < curIndex ->
                 let nextIndex = curIndex - nLength l - sizeRight l
-                let v' = v.AddLeft pcLength pcLines.Length
+                let v' = v.AddLeft pcLength pcLineCount
                 ins nextIndex l (fun l' ->
                     PT(h, l', v', r) |> skew |> split |> cont
                 )
             | PT(h, l, v, r) when insIndex > curIndex + v.Length ->
                 let nextIndex = curIndex + v.Length + sizeLeft r
-                let v' = v.AddRight pcLength pcLines.Length
+                let v' = v.AddRight pcLength pcLineCount
                 ins nextIndex r (fun r' ->
                     PT(h, l, v', r') |> skew |> split |> cont
                 )
             | PT(h, l, v, r) when insIndex = curIndex ->
-                let v' = v.AddLeft pcLength pcLines.Length
+                let v' = v.AddLeft pcLength pcLineCount
                 let l' = insMax pcStart pcLength pcLines l
                 PT(h, l', v', r) |> skew |> split |> cont
             | PT(h, l, v, r) when insIndex = curIndex + v.Length && isConsecutive v pcStart ->
-                let v'Lines = Array.append v.Lines pcLines
+                let v'Lines =
+                    match v.Lines, pcLines with
+                    | Some vln, Some pcln -> Some <| Array.append vln pcln
+                    | (Some _) as ln, _ -> ln
+                    | _, ((Some _) as ln) -> ln
+                    | None, None -> None
+
                 let v' = { v with Length = v.Length + pcLength; Lines = v'Lines }
                 PT(h, l, v', r) |> cont
             | PT(h, l, v, r) when insIndex = curIndex + v.Length ->
-                let v' = v.AddRight pcLength pcLines.Length
+                let v' = v.AddRight pcLength pcLineCount
                 let r' = insMin pcStart pcLength pcLines r
                 PT(h, l, v', r') |> skew |> split |> cont
             | PT(h, l, v, r) ->
@@ -173,7 +179,12 @@ module PieceTree =
                 let rStart = v.Start + difference
                 let rLength = v.Length - difference
 
-                let (leftLines, rightLines) = splitLines rStart v.Lines
+                let (leftLines, rightLines) = 
+                    match v.Lines with
+                    | Some x -> 
+                        let left, right = splitLines rStart x
+                        Some(left), Some(right)
+                    | None -> None, None
 
                 let l' = insMax v.Start difference leftLines l
                 let r' = insMin rStart rLength rightLines r
@@ -182,9 +193,9 @@ module PieceTree =
                             Length = pcLength; 
                             Lines = pcLines;
                             LeftIdx = v.LeftIdx + difference;
-                            LeftLn = v.LeftLn + leftLines.Length;
+                            LeftLn = v.LeftLn + lineArrLength leftLines;
                             RightIdx = v.RightIdx + rLength; 
-                            RightLn = v.RightLn + rightLines.Length; }
+                            RightLn = v.RightLn + lineArrLength rightLines; }
                 PT(h, l', v', r') |> skew |> split |> cont
 
         ins (sizeLeft tree) tree topLevelCont
@@ -324,22 +335,25 @@ module PieceTree =
                     then get (curLine - nLines l - linesRight l) l acc
                     else acc
 
-                let nodeEndLine = curLine + v.Lines.Length
+                let nodeEndLine = curLine + (lineArrLength v.Lines)
                 let middle =
                     if lineInRange curLine line nodeEndLine then
                         left + PieceLogic.text v table
                     elif startIsInLine curLine line nodeEndLine then
                         (* + 1 gives us \n in string and - v.Start takes us to piece offset *)
-                        let length = v.Lines[0] + 1 - v.Start
+                        let (Some vlns) = v.Lines
+                        let length = vlns[0] + 1 - v.Start
                         left + PieceLogic.atStartAndLength v.Start length table
                     elif endIsInLine curLine line nodeEndLine then
-                        let start = v.Lines[v.Lines.Length - 1] + 1
+                        let (Some vlns) = v.Lines
+                        let start = vlns[vlns.Length - 1] + 1
                         let length = v.Length - start + v.Start
                         left + PieceLogic.atStartAndLength start length table
                     elif middleIsInLine curLine line nodeEndLine then
+                        let (Some vlns) = v.Lines
                         let lineDifference = line - curLine
-                        let lineStart = v.Lines[lineDifference - 1] + 1
-                        let lineLength = v.Lines[lineDifference] - lineStart + 1
+                        let lineStart = vlns[lineDifference - 1] + 1
+                        let lineLength = vlns[lineDifference] - lineStart + 1
                         left + PieceLogic.atStartAndLength lineStart lineLength table
                     else
                         left
