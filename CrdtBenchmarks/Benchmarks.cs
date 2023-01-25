@@ -5,7 +5,7 @@ using CrdtBenchmarks;
 
 namespace CrdtBenchmarks
 {
-    [MemoryDiagnoser, InvocationCount(10)]
+    [MemoryDiagnoser, HardwareCounters]
     public class PieceRopeBenchmarks
     {
         [Benchmark]

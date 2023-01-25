@@ -161,10 +161,7 @@ module PieceTree =
                 let l' = insMax pcStart pcLength pcLines l
                 PT(h, l', v', r) |> skew |> split |> cont
             | PT(h, l, v, r) when insIndex = curIndex + v.Length && isConsecutive v pcStart ->
-                let v'Lines = ResizeArray()
-                v'Lines.AddRange v.Lines
-                v'Lines.AddRange pcLines
-                let v'Lines = v'Lines.ToArray()
+                let v'Lines = Array.append v.Lines pcLines
                 let v' = { v with Length = v.Length + pcLength; Lines = v'Lines }
                 PT(h, l, v', r) |> cont
             | PT(h, l, v, r) when insIndex = curIndex + v.Length ->
