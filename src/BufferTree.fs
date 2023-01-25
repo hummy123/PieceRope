@@ -1,7 +1,6 @@
 ﻿namespace Buffer
 
 open Types
-open Node
 open Data
 
 (* Contains AA Tree rebalancing logic, specific for buffer metadata. *)
@@ -36,6 +35,8 @@ module Tree =
         let rec insMax node cont =
             match node with
             | BE -> BT(1, BE, 0, string, 0, BE) |> cont
+            | BT(h, l, lm, v, rm, BE) when v.Length + string.Length <= TargetNodeSize ->
+                BT(h, l, lm, v + string, rm, BE) |> cont
             | BT(h, l, lm, v, rm, r) -> 
                 insMax r (fun r' ->
                     BT(h, l, lm, v, rm + string.Length, r')

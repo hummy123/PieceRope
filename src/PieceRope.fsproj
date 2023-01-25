@@ -7,7 +7,6 @@
 
   <ItemGroup>
     <Compile Include="BufferTypes.fs" />
-    <Compile Include="BufferNode.fs" />
     <Compile Include="BufferData.fs" />
     <Compile Include="BufferTree.fs" />
     <Compile Include="PieceTypes.fs" />
