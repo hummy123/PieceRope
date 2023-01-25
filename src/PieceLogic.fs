@@ -17,15 +17,18 @@ module PieceLogic =
 
         arrLeft.ToArray(), arrRight.ToArray()
 
-    let inline deleteLinesInRange p1Length p2Start lines =
-        let p1Lines = ResizeArray()
-        let p2Lines = ResizeArray()
-        for i in lines do
-            if i < p1Length
-            then p1Lines.Add i
-            elif i >= p2Start
-            then p2Lines.Add i
-        p1Lines.ToArray(), p2Lines.ToArray()
+    let inline deleteLinesInRange p1Length p2Start (lines: int array) =
+        let p1Lines = 
+            match Array.tryFindIndex (fun x -> x > p1Length) lines with
+            | Some x -> lines[.. x - 1 ]
+            | None -> [||]
+
+        let p2Lines =
+            match Array.tryFindIndex (fun x -> x >= p2Start) lines with
+            | Some x -> lines[x..]
+            | None -> [||]
+        
+        lines[..start], p2Lines
 
     let inline deleteInRange curIndex start finish (piece: PieceNode) =
         (* p1 retains metadata and p2 is leaf *)
