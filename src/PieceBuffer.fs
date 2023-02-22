@@ -43,7 +43,7 @@ module internal PieceBuffer =
     | BE -> 0
     | BT(_, _, _, _, rm, _) -> rm
 
-  (* AVL Tree balancing functions. 
+  (* AVL Tree-specific functions. 
    * Adapted from verified proof at https://isabelle.in.tum.de/library/HOL/HOL-Data_Structures/document.pdf . *)
   let inline private ht node =
     match node with
