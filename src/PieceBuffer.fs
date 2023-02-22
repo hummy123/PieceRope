@@ -53,7 +53,7 @@ module internal PieceBuffer =
   let inline private mk l a r =
     let hl = ht l
     let hr = ht r
-    let h = if hl > hr then hl + 1 else hr + 1
+    let h = (if hl > hr then hl else hr) + 1
     BT(h, l, size l, a, size r, r)
 
   let inline private balR a x bc =
@@ -102,4 +102,41 @@ module internal PieceBuffer =
   let inline private substringRangeInMiddleOfNode start curIndex finish nodeEndIndex =
     start >= curIndex && finish <= nodeEndIndex
 
+  open System.Text
+
+  /// Returns a substring from a PieceBuffer.
+  let substring (start: int) (length: int) buffer =
+    let finish = start + length
+    let sb = StringBuilder(length)
+    let rec sub curIndex node cont =
+      match node with
+      | BE -> () |> cont
+      | BT(_, l, lm, v, rm, r) -> 
+          let nodeEndIndex = curIndex + v.Length
+
+          if nodeInSubstringRange start curIndex finish nodeEndIndex then
+            sub (curIndex - stringLength l) l (fun _ -> 
+              sb.Append v |> ignore
+              sub (nodeEndIndex + sizeLeft r) r (fun x -> x |> cont)
+            )
+          elif startOfNodeInSubstringRange start curIndex finish nodeEndIndex then
+            sub (curIndex - stringLength l - sizeRight l) l (fun _ -> 
+              let length = finish - curIndex
+              cont(sb.Append (v.Substring(0, length)) |> ignore)
+            )
+          elif endOfNodeInSubstringRange start curIndex finish nodeEndIndex then
+            let strStart = start - curIndex
+            let len = v.Length - strStart
+            sb.Append(v.Substring(strStart, len)) |> ignore
+            sub (curIndex + v.Length + sizeLeft r) r (fun x -> x |> cont)
+          elif substringRangeInMiddleOfNode start curIndex finish nodeEndIndex then
+            let strStart = start - curIndex
+            sb.Append(v.Substring(strStart, length)) |> ignore
+          elif start < curIndex then
+            sub (curIndex - stringLength l - sizeRight l) l (fun x -> x |> cont)
+          else
+            sub (nodeEndIndex + sizeLeft r) r (fun x -> x |> cont)
+
+    sub (sizeLeft buffer) buffer topLevelCont |> ignore
+    sb.ToString()
 
