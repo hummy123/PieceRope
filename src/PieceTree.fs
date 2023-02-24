@@ -244,4 +244,37 @@ module internal PieceTree =
           app r (fun r' -> balR l curStart curLength curLines r' |> cont)
     app tree topLevelCont
 
+  let insert insIndex pcStart pcLength pcLines tree =
+    let rec ins curIndex node cont =
+      match node with
+      | PE -> 
+          mk PE pcStart pcLength pcLines PE |> cont
+      | PT(_, l, _, lidx, curStart, curLength, curLines, ridx, _, r) ->
+          let nodeEndIndex = curIndex + curLength
+          if insIndex < curIndex then
+            let nextIndex = curIndex - nLength l - sizeRight l 
+            ins nextIndex l (fun l' -> balL l' curStart curLength curLines r |> cont)
+          elif insIndex > nodeEndIndex then
+            let nextIndex = nodeEndIndex + sizeLeft r
+            ins nextIndex r (fun r' -> balR l curStart curLength curLines r' |> cont)
+          elif insIndex = curIndex then
+            let l' = insMax pcStart pcLength pcLines l
+            balL l' curStart curLength curLines r |> cont
+          elif insIndex = nodeEndIndex then
+            if isConsecutive curStart curLength pcStart then
+              mk l curStart (curLength + pcLength) (Array.append curLines pcLines) r |> cont
+            else
+              let r' = prepend pcStart pcLength pcLines r
+              balR l curStart curLength curLines r' |> cont
+          else
+            let difference = insIndex - curIndex
+            let rStart = curStart + difference
+            let rLength = curLength - difference
+            let (leftLines, rightLines) = splitLines rStart curLines
+            let l' = insMax curStart difference leftLines l
+            let r' = prepend rStart rLength rightLines r
+            mk l' pcStart pcLength pcLines r' |> cont
+    ins (sizeLeft tree) tree topLevelCont
+            
+
 
