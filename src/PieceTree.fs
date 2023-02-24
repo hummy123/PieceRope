@@ -207,3 +207,41 @@ module internal PieceTree =
   /// Returns a substring at the provided start and length.
   let inline atStartAndLength start length buffer =
     PieceBuffer.substring start length buffer
+
+(* Core PieceTree logic. *)
+  let inline private isConsecutive existingStart existingLength insStart =
+    existingStart + existingLength = insStart
+
+  /// Inserts a piece at the start of the tree.
+  let internal prepend pcStart pcLength pcLines tree =
+    let rec pre node cont =
+      match node with
+      | PE -> 
+          mk PE pcStart pcLength pcLines PE |> cont
+      | PT(_, l, _, _, curStart, curLength, curLines, _, _, r) ->
+          pre l (fun l' -> balL l' curStart curLength curLines r |> cont)
+    pre tree topLevelCont
+
+  /// Inserts a piece at the end of the tree. Will not merge two consecutive pieces.
+  let internal insMax pcStart pcLength pcLines tree =
+    let rec max node cont =
+      match node with
+      | PE ->
+          mk PE pcStart pcLength pcLines PE |> cont
+      | PT(_, l, _, _, curStart, curLength, curLines, _, _, r) ->
+          max r (fun r' -> balR l curStart curLength curLines r' |> cont)
+    max tree topLevelCont
+
+  /// Appends a piece to the end of the tree. Will merge with the currently-last piece if possible.
+  let internal append pcStart pcLength pcLines tree =
+    let rec app node cont =
+      match node with
+      | PE ->
+          mk PE pcStart pcLength pcLines PE |> cont
+      | PT(_, l, _, _, curStart, curLength, curLines, _, _, PE) when isConsecutive curStart curLength pcStart ->
+          mk l curStart (curLength + pcLength) (Array.append curLines pcLines) PE |> cont
+      | PT(_, l, _, _, curStart, curLength, curLines, _, _, r) ->
+          app r (fun r' -> balR l curStart curLength curLines r' |> cont)
+    app tree topLevelCont
+
+
