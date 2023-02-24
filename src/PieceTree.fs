@@ -244,6 +244,7 @@ module internal PieceTree =
           app r (fun r' -> balR l curStart curLength curLines r' |> cont)
     app tree topLevelCont
 
+  /// Inserts a piece into a tree at the specified index. Will merge if this piece is consecutive with another.
   let insert insIndex pcStart pcLength pcLines tree =
     let rec ins curIndex node cont =
       match node with
@@ -277,4 +278,66 @@ module internal PieceTree =
     ins (sizeLeft tree) tree topLevelCont
             
 
+(* Repeated if-statements used both for delete and substring. *)
+  let inline private nodeInSubstringRange start curIndex finish nodeEndIndex =
+    start <= curIndex && finish >= nodeEndIndex
 
+  let inline private endOfNodeInSubstringRange start curIndex finish nodeEndIndex =
+    start <= curIndex && finish < nodeEndIndex && curIndex < finish
+
+  let inline private startOfNodeInSubstringRange start curIndex finish nodeEndIndex =
+    start > curIndex && finish >= nodeEndIndex && start <= nodeEndIndex
+
+  let inline private middleOfNodeInSubstringRange start curIndex finish nodeEndIndex =
+    start >= curIndex && finish <= nodeEndIndex
+
+  let delete start length tree =
+    let finish = start + length
+    let rec del curIndex node cont =
+      match node with
+      | PE -> 
+          PE |> cont
+      | PT(_, l, _, lidx, curStart, curLength, curLines, ridx, _, r) ->
+          let nodeEndIndex = curIndex + curLength
+          if nodeInSubstringRange start curIndex finish nodeEndIndex then
+            let recurseLeftIndex = curIndex - nLength l - sizeRight l
+            let recurseRightIndex = nodeEndIndex + sizeLeft r
+
+            del recurseLeftIndex l (fun l' ->
+              del recurseRightIndex r (fun r' ->
+                if l' = PE then
+                  r' |> cont
+                else
+                  let (newLeft, newStart, newLength, newLines) = splitMax l' topLevelCont
+                  balR newLeft newStart newLength newLines r' |> cont
+              )
+            )
+
+          elif endOfNodeInSubstringRange start curIndex finish nodeEndIndex then
+            let recurseLeftIndex = curIndex - nLength l - sizeRight l
+            del recurseLeftIndex l (fun l' ->
+              let (newStart, newLength, newLines) = deleteAtStart curIndex finish curStart curLength curLines
+              balR l' newStart newLength newLines r |> cont
+            )
+
+          elif startOfNodeInSubstringRange start curIndex finish nodeEndIndex then
+            let recurseRightIndex = nodeEndIndex + sizeLeft r
+            del recurseRightIndex r (fun r' ->
+              let (length, lines) = deleteAtEnd curIndex start curLines
+              balL l curStart length lines r' |> cont
+            )
+          
+          elif middleOfNodeInSubstringRange start curIndex finish nodeEndIndex then
+            let (p1Length, p1Lines, p2Start, p2Length, p2Lines) = 
+              deleteInRange curIndex start finish curStart curLength curLines
+            let r' = prepend p2Start p2Length p2Lines r
+            balR l curStart p1Length p1Lines r' |> cont
+
+          elif start < curIndex then
+            let recurseLeftIndex = curIndex - nLength l - sizeRight l
+            del recurseLeftIndex l (fun l' -> balR l' curStart curLength curLines r |> cont)
+
+          else
+            let recurseRightIndex = nodeEndIndex + sizeLeft r
+            del recurseRightIndex r (fun r' -> balL l curStart curLength curLines r' |> cont)
+    del (sizeLeft tree) tree topLevelCont
