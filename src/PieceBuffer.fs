@@ -13,6 +13,7 @@ type PieceBuffer =
   | BE
   | BT of AvlHeight * PieceBuffer * LeftSize * string * RightSize * PieceBuffer
 
+[<RequireQualifiedAccess>]
 module internal PieceBuffer =
   (* If node's string length + append string length are greater than this, create new node when appending. Else concat strings. *)
   [<Literal>]
