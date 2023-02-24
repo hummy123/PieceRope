@@ -23,6 +23,22 @@ module internal PieceBuffer =
   [<Literal>]
   let private TOLERANCE = 2
 
+  (* This seemed to make continuation passing style faster when used as the initial call to a recursive function. *)
+  let inline private topLevelCont x = x
+
+  (* Folds over the strings in a PieceBuffer in order. Useful for serialisation. *)
+  let internal foldStrings folder initialState buffer =
+    let rec fold state node cont =
+      match node with
+      | BE -> 
+          state |> cont
+      | BT(_, l, _, v, _, r) ->
+          fold state l (fun state ->
+            let state = folder v
+            fold state r (fun state -> state |> cont)
+          )
+    fold initialState buffer topLevelCont
+
   (* Retrieve PieceBuffer metadata. *)
   let inline private size tree =
     match tree with
@@ -70,9 +86,6 @@ module internal PieceBuffer =
       | x -> x
     else
       mk a x bc
-
-  (* This seemed to make continuation passing style faster when used as the initial call to a recursive function. *)
-  let inline private topLevelCont x = x
 
   /// An empty instance of the PieceBuffer type.
   let empty = BE

@@ -37,6 +37,21 @@ type PieceTree =
 
 [<RequireQualifiedAccess>]
 module internal PieceTree =
+  let inline private topLevelCont x = x
+
+  (* Folds over pieces in a PieceTree in order. Useful for other functions such as saving, serialisation or retrieving text. *)
+  let internal foldPieces folder initialState tree =
+    let rec fold state node cont =
+      match node with
+      | PE -> 
+          state |> cont
+      | PT(_, l, _, _, pcStart, pcLength, pcLines, _, _, r) ->
+          fold state l (fun state ->
+            let state = folder state pcStart pcLength pcLines
+            fold state r (fun x -> x |> cont)
+          )
+    fold initialState tree topLevelCont
+
   (* Maximum height difference tolerated between two sibling subtree nodes. *)
   [<Literal>]
   let private TOLERANCE = 2
