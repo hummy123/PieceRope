@@ -1,13 +1,36 @@
 ﻿namespace FsRopeBenchmarks
 
-open PieceRope
-open PieceRope.PieceRope
+open HumzApps.TextDocument
+open Txns
 
 open System
 open BenchmarkDotNet.Attributes
 open BenchmarkDotNet.Running
 open BenchmarkDotNet.Jobs
 
+[<MemoryDiagnoser; HtmlExporter; MarkdownExporter>]
+type SvelteTxns() =
+  [<Benchmark; IterationCount(1000)>]
+  member this.Run() =
+    Utils.runTxns (Sveltecomponent.data)
+
+[<MemoryDiagnoser; HtmlExporter; MarkdownExporter>]
+type RustTxns() =
+  [<Benchmark; IterationCount(1000)>]
+  member this.Run() =
+    Utils.runTxns (Rustcode.data)
+
+[<MemoryDiagnoser; HtmlExporter; MarkdownExporter>]
+type SephblogTxns() =
+  [<Benchmark; IterationCount(1000)>]
+  member this.Run() =
+    Utils.runTxns (Sephblog.data)
+
+[<MemoryDiagnoser; HtmlExporter; MarkdownExporter>]
+type AutomergeTxns() =
+  [<Benchmark; IterationCount(1000)>]
+  member this.Run() =
+    Utils.runTxns (Automerge.data)
 
 [<MemoryDiagnoser; HtmlExporter; MarkdownExporter>]
 type CreateDocument() =
@@ -22,89 +45,94 @@ type CreateDocument() =
 
     [<Benchmark; InvocationCount(1000)>]
     member this.CreateRopeOfSize() = 
-        PieceRope.create this.string
+        TextDocument.create this.string
 
 [<MemoryDiagnoser; HtmlExporter; MarkdownExporter>]
 type InsertIntoDocument() =
     [<Params(100, 1000, 10_000)>]
     member val insertTimes = 0 with get, set
 
-    member val rope = PieceRope.empty with get, set
+    member val rope = TextDocument.empty with get, set
     member val docLength = 0 with get, set
 
     [<IterationSetup>]
     member this.CreateDocument() =
         let str = String.replicate this.insertTimes "hello"
         this.docLength <- str.Length
-        this.rope <- PieceRope.create str
+        this.rope <- TextDocument.create str
 
     [<Benchmark; InvocationCount(1000)>]
     member this.InsertIntoRopeAtStart() = 
-        PieceRope.insert 0 "A" this.rope
+        TextDocument.insert 0 "A" this.rope
 
     [<Benchmark; InvocationCount(1000)>]
     member this.InsertIntoRopeAtMiddle() =
-        PieceRope.insert (this.docLength / 2) "A" this.rope
+        TextDocument.insert (this.docLength / 2) "A" this.rope
 
     [<Benchmark; InvocationCount(1000)>]
     member this.InsertIntoRopeAtEnd() = 
-        PieceRope.insert this.docLength "A" this.rope
+        TextDocument.insert this.docLength "A" this.rope
 
 [<MemoryDiagnoser; HtmlExporter; MarkdownExporter>]
 type DeleteFromDocument() =
     [<Params(100, 1000, 10_000)>]
     member val insertTimes = 0 with get, set
 
-    member val rope = PieceRope.empty with get, set
+    member val rope = TextDocument.empty with get, set
     member val docLength = 0 with get, set
 
     [<IterationSetup>]
     member this.CreateDocument() =
         let str = String.replicate this.insertTimes "hello"
         this.docLength <- str.Length
-        this.rope <- PieceRope.create str
+        this.rope <- TextDocument.create str
 
     [<Benchmark; InvocationCount(1000)>]
     member this.DeleteFromStartOfrope() = 
-        this.rope.Delete(0, 10)
+        TextDocument.delete 0 1 this.rope
 
     [<Benchmark; InvocationCount(1000)>]
     member this.DeleteFromMiddleOfrope() =
-        this.rope.Delete(this.docLength / 2, 10)
+        TextDocument.delete (this.docLength / 2) 10 this.rope
 
     [<Benchmark; InvocationCount(1000)>]
     member this.DeleteFromEndOfrope() = 
-        this.rope.Delete(this.docLength - 10, 9)
+        TextDocument.delete (this.docLength - 10) 9 this.rope
 
 [<MemoryDiagnoser; HtmlExporter; MarkdownExporter>]
 type GetSubstring() =
     [<Params(100, 1000, 10_000)>]
     member val insertTimes = 0 with get, set
 
-    member val rope = PieceRope.empty with get, set
+    member val rope = TextDocument.empty with get, set
     member val docLength = 0 with get, set
 
     [<IterationSetup>]
     member this.CreateDocument() =
         let str = String.replicate this.insertTimes "hello"
         this.docLength <- str.Length
-        this.rope <- PieceRope.create str
+        this.rope <- TextDocument.create str
 
     [<Benchmark; InvocationCount(1000)>]
     member this.GetSubstringAtStartOfrope() = 
-        this.rope.Substring(0, 10)
+        TextDocument.substring 0 10 this.rope
 
     [<Benchmark; InvocationCount(1000)>]
     member this.GetSubstringAtMiddleOfrope() =
-        this.rope.Substring(this.docLength / 2, 10)
+        TextDocument.substring (this.docLength / 2) 10 this.rope
 
     [<Benchmark; InvocationCount(1000)>]
     member this.GetSubstringAtEndOfrope() = 
-        this.rope.Substring(this.docLength - 10, 9)
+        TextDocument.substring (this.docLength - 10) 9 this.rope
 
 module Main = 
     [<EntryPoint>]
     let Main _ =
+        BenchmarkRunner.Run<SvelteTxns>() |> ignore
+        BenchmarkRunner.Run<RustTxns>() |> ignore
+        BenchmarkRunner.Run<SephblogTxns>() |> ignore
+        BenchmarkRunner.Run<AutomergeTxns>() |> ignore
+
         BenchmarkRunner.Run<CreateDocument>() |> ignore
         BenchmarkRunner.Run<InsertIntoDocument>() |> ignore
         BenchmarkRunner.Run<DeleteFromDocument>() |> ignore

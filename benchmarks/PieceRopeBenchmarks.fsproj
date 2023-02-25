@@ -15,7 +15,8 @@
 	</ItemGroup>
 
 	<ItemGroup>
-	  <ProjectReference Include="..\src\PieceRope.fsproj" />
+	  <ProjectReference Include="..\txns\txns.fsproj" />
+    <ProjectReference Include="..\src\TextDocument.fsproj" />
 	</ItemGroup>
 
 </Project>
