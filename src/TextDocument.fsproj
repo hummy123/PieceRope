@@ -6,6 +6,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Include="PieceString.fs" />
     <Compile Include="PieceBuffer.fs" />
     <Compile Include="PieceTree.fs" />
     <Compile Include="TextDocument.fs" />

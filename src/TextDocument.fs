@@ -14,17 +14,17 @@ type TextDocument = {
   Pieces: PieceTree;
 }
   with
-  member inline this.Length  = PieceTree.size this.Pieces
-  member inline this.Lines   = PieceTree.lines this.Pieces
+  member inline this.Length                   = PieceTree.size this.Pieces
+  member inline this.Lines                    = PieceTree.lines this.Pieces
 
-  member inline this.Insert index string  = TextDocument.insert index string this
-  member inline this.Delete start length  = TextDocument.delete start length this
-  member inline this.Prepend string       = TextDocument.prepend string this
-  member inline this.Append string        = TextDocument.append string this
+  member inline this.Insert(index, string)    = TextDocument.insert index string this
+  member inline this.Delete(start, length)    = TextDocument.delete start length this
+  member inline this.Prepend string           = TextDocument.prepend string this
+  member inline this.Append  string           = TextDocument.append string this
 
-  member inline this.Substring start length = TextDocument.substring start length this
-  member inline this.GetLine line           = TextDocument.getLine line this
-  member inline this.Text()                 = TextDocument.text this
+  member inline this.Substring(start, length) = TextDocument.substring start length this
+  member inline this.GetLine line             = TextDocument.getLine line this
+  member inline this.Text()                   = TextDocument.text this
 
 /// The TextDocument module provides functions for inserting into, deleting from and querying ranges of text.
 [<RequireQualifiedAccess>]
@@ -55,7 +55,7 @@ module TextDocument =
     else
       let pcStart = PieceBuffer.size document.Buffer
       let (lineBreaks, charBreaks) = preprocessString string pcStart
-      let buffer = PieceBuffer.append string document.Buffer
+      let buffer = PieceBuffer.append string charBreaks document.Buffer
       let pieces = PieceTree.insert index pcStart charBreaks.Length lineBreaks document.Pieces
       { Buffer = buffer; Pieces = pieces; }
 
@@ -65,7 +65,7 @@ module TextDocument =
     else
       let pcStart = PieceBuffer.size document.Buffer
       let (lineBreaks, charBreaks) = preprocessString string pcStart
-      let buffer = PieceBuffer.append string document.Buffer
+      let buffer = PieceBuffer.append string charBreaks document.Buffer
       let pieces = PieceTree.prepend pcStart charBreaks.Length lineBreaks document.Pieces
       { Buffer = buffer; Pieces = pieces; }
     
@@ -75,7 +75,7 @@ module TextDocument =
     else
       let pcStart = PieceBuffer.size document.Buffer
       let (lineBreaks, charBreaks) = preprocessString string pcStart
-      let buffer = PieceBuffer.append string document.Buffer
+      let buffer = PieceBuffer.append string charBreaks document.Buffer
       let pieces = PieceTree.append pcStart charBreaks.Length lineBreaks document.Pieces
       { Buffer = buffer; Pieces = pieces; }
 

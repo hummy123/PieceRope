@@ -13,7 +13,7 @@ type PieceBufferRightSize = int
 /// Ignoring this distinction lets us reduce memory consumption and provide a more convenient API.
 type PieceBuffer =
   | BE
-  | BT of PieceBufferHeight * PieceBuffer * PieceBufferLeftSize * string * PieceBufferRightSize * PieceBuffer
+  | BT of PieceBufferHeight * PieceBuffer * PieceBufferLeftSize * PieceString * PieceBufferRightSize * PieceBuffer
 
 [<RequireQualifiedAccess>]
 module internal PieceBuffer =
@@ -93,15 +93,15 @@ module internal PieceBuffer =
   let empty = BE
 
   /// Appends a string to a PieceBuffer.
-  let inline append (string: string) buffer =
+  let inline append (string: string) charBreaks buffer =
     let rec app node cont =
       match node with
       | BE -> 
-          mk BE string BE |> cont
+          mk BE (U(string, charBreaks)) BE |> cont
       | BT(h, l, lm, v, rm, r) when v.Length + string.Length <= MAX_CONCAT_LENGTH ->
-          BT(h, l, lm, v + string, rm, r) |> cont
+          BT(h, l, lm, v.Concat string charBreaks, rm, r) |> cont
       | BT(_, l, _, v, _, r) ->
-          app r (fun r' -> balR l v r' |> cont)
+          app r (fun r' -> balR l (v.Compress()) r' |> cont)
     app buffer topLevelCont
 
   (* Below functions provide a descriptive name for the substring cases we need to check for,
