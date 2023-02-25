@@ -1,5 +1,7 @@
 namespace HumzApps.TextDocument
 
+open System.Text
+
 type PieceBufferHeight = int
 
 type PieceBufferLeftSize = int
@@ -27,7 +29,7 @@ module internal PieceBuffer =
   let inline private topLevelCont x = x
 
   (* Folds over the strings in a PieceBuffer in order. Useful for serialisation. *)
-  let internal foldStrings folder initialState buffer =
+  let inline internal foldStrings folder initialState buffer =
     let rec fold state node cont =
       match node with
       | BE -> 
@@ -91,7 +93,7 @@ module internal PieceBuffer =
   let empty = BE
 
   /// Appends a string to a PieceBuffer.
-  let append (string: string) buffer =
+  let inline append (string: string) buffer =
     let rec app node cont =
       match node with
       | BE -> 
@@ -116,10 +118,8 @@ module internal PieceBuffer =
   let inline private substringRangeInMiddleOfNode start curIndex finish nodeEndIndex =
     start >= curIndex && finish <= nodeEndIndex
 
-  open System.Text
-
   /// Returns a substring from a PieceBuffer.
-  let substring (start: int) (length: int) buffer =
+  let inline substring (start: int) (length: int) buffer =
     let finish = start + length
     let sb = StringBuilder(length)
     let rec sub curIndex node cont =

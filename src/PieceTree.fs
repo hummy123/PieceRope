@@ -50,7 +50,7 @@ module internal PieceTree =
   let inline private topLevelCont x = x
 
   (* Folds over pieces in a PieceTree in order. Useful for other functions such as saving, serialisation or retrieving text. *)
-  let foldPieces folder initialState tree =
+  let inline foldPieces folder initialState tree =
     let rec fold state node cont =
       match node with
       | PE -> 
@@ -223,7 +223,7 @@ module internal PieceTree =
     existingStart + existingLength = insStart
 
   /// Inserts a piece at the start of the tree.
-  let prepend pcStart pcLength pcLines tree =
+  let inline prepend pcStart pcLength pcLines tree =
     let rec pre node cont =
       match node with
       | PE -> 
@@ -233,7 +233,7 @@ module internal PieceTree =
     pre tree topLevelCont
 
   /// Inserts a piece at the end of the tree. Will not merge two consecutive pieces.
-  let private insMax pcStart pcLength pcLines tree =
+  let inline private insMax pcStart pcLength pcLines tree =
     let rec max node cont =
       match node with
       | PE ->
@@ -243,7 +243,7 @@ module internal PieceTree =
     max tree topLevelCont
 
   /// Appends a piece to the end of the tree. Will merge with the currently-last piece if possible.
-  let append pcStart pcLength pcLines tree =
+  let inline append pcStart pcLength pcLines tree =
     let rec app node cont =
       match node with
       | PE ->
