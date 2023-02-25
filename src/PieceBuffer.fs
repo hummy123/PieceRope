@@ -98,8 +98,8 @@ module internal PieceBuffer =
       match node with
       | BE -> 
           mk BE (U(string, charBreaks)) BE |> cont
-      | BT(h, l, lm, v, rm, r) when v.Length + string.Length <= MAX_CONCAT_LENGTH ->
-          BT(h, l, lm, v.Concat string charBreaks, rm, r) |> cont
+      | BT(h, l, lm, v, rm, BE) when v.Length + string.Length <= MAX_CONCAT_LENGTH ->
+          BT(h, l, lm, v.Concat string charBreaks, rm, BE) |> cont
       | BT(_, l, _, v, _, r) ->
           app r (fun r' -> balR l (v.Compress()) r' |> cont)
     app buffer topLevelCont
