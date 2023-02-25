@@ -10,7 +10,9 @@
   <ItemGroup>
     <Compile Include="Rope_Insert_Tests.fs" />
     <Compile Include="Rope_Delete_Tests.fs" />
+    <Compile Include="Rope_Substring_Tests.fs" />
     <Compile Include="Rope_GetLine_Tests.fs" />
+    <Compile Include="Random_Rope_Tests.fs" />
     <Compile Include="Program.fs" />
   </ItemGroup>
 

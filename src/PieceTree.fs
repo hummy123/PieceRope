@@ -407,7 +407,7 @@ module internal PieceTree =
     let sb = StringBuilder()
     let rec get curLine curIndex node cont =
       match node with
-      | PE -> None
+      | PE -> None |> cont
       | PT(_, l, _, lidx, nodeStart, nodeLength, nodeLines, ridx, _, r) ->
           let nodeEndLine = curLine + nodeLines.Length
 
