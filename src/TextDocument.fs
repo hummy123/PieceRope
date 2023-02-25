@@ -1,10 +1,11 @@
-namespace rec HumzApps.TextBuffer
+namespace rec HumzApps.TextDocument
 (*
   Recursive namespace is only for attaching methods to TextDocument type
   for easier OOP-style consumption for C# users.
   There are no other circular dependencies.
  *)
 
+open System
 open System.Globalization
 
 /// A TextDocument is an immutable data structure for manupilating text efficiently.
@@ -25,6 +26,8 @@ type TextDocument = {
   member inline this.GetLine line           = TextDocument.getLine line this
   member inline this.Text()                 = TextDocument.text this
 
+/// The TextDocument module provides functions for inserting into, deleting from and querying ranges of text.
+[<RequireQualifiedAccess>]
 module TextDocument =
   let empty = { Buffer = PieceBuffer.empty; Pieces = PieceTree.empty }
 
@@ -46,37 +49,49 @@ module TextDocument =
 
     lineBreaks.ToArray(), charBreaks.ToArray()
 
-  let insert index (string: string) document =
-    let pcStart = PieceBuffer.size document.Buffer
-    let (lineBreaks, charBreaks) = preprocessString string pcStart
-    let buffer = PieceBuffer.append string document.Buffer
-    let pieces = PieceTree.insert index pcStart charBreaks.Length lineBreaks document.Pieces
-    { Buffer = buffer; Pieces = pieces; }
+  let insert (index: int) (string: string) document =
+    if String.IsNullOrEmpty string then
+      document
+    else
+      let pcStart = PieceBuffer.size document.Buffer
+      let (lineBreaks, charBreaks) = preprocessString string pcStart
+      let buffer = PieceBuffer.append string document.Buffer
+      let pieces = PieceTree.insert index pcStart charBreaks.Length lineBreaks document.Pieces
+      { Buffer = buffer; Pieces = pieces; }
 
   let prepend (string: string) document =
-    let pcStart = PieceBuffer.size document.Buffer
-    let (lineBreaks, charBreaks) = preprocessString string pcStart
-    let buffer = PieceBuffer.append string document.Buffer
-    let pieces = PieceTree.prepend pcStart charBreaks.Length lineBreaks document.Pieces
-    { Buffer = buffer; Pieces = pieces; }
+    if String.IsNullOrEmpty string then
+      document
+    else
+      let pcStart = PieceBuffer.size document.Buffer
+      let (lineBreaks, charBreaks) = preprocessString string pcStart
+      let buffer = PieceBuffer.append string document.Buffer
+      let pieces = PieceTree.prepend pcStart charBreaks.Length lineBreaks document.Pieces
+      { Buffer = buffer; Pieces = pieces; }
     
   let append (string: string) document =
-    let pcStart = PieceBuffer.size document.Buffer
-    let (lineBreaks, charBreaks) = preprocessString string pcStart
-    let buffer = PieceBuffer.append string document.Buffer
-    let pieces = PieceTree.append pcStart charBreaks.Length lineBreaks document.Pieces
-    { Buffer = buffer; Pieces = pieces; }
+    if String.IsNullOrEmpty string then
+      document
+    else
+      let pcStart = PieceBuffer.size document.Buffer
+      let (lineBreaks, charBreaks) = preprocessString string pcStart
+      let buffer = PieceBuffer.append string document.Buffer
+      let pieces = PieceTree.append pcStart charBreaks.Length lineBreaks document.Pieces
+      { Buffer = buffer; Pieces = pieces; }
 
-  let delete start length document =
-    let pieces = PieceTree.delete start length document.Pieces
-    { document with Pieces = pieces; }
+  let delete (start: int) (length: int) document =
+    if length <= 0 then
+      document
+    else
+      let pieces = PieceTree.delete start length document.Pieces
+      { document with Pieces = pieces; }
 
   let create string = append string empty
 
-  let substring start length document =
+  let substring (start: int) (length: int) document =
     PieceTree.substring start length document.Pieces document.Buffer
 
-  let getLine line document =
+  let getLine (line: int) document =
     PieceTree.getLine line document.Pieces document.Buffer
 
   let text document =

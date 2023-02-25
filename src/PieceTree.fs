@@ -1,16 +1,16 @@
-namespace HumzApps.TextBuffer
+namespace HumzApps.TextDocument
 
 open System.Text
 
-type AvlHeight = int
+type PieceTreeHeight = int
 
-type LeftSize = int
+type PieceTreeLeftSize = int
 
-type LeftLines = int
+type PieceTreeLeftLines = int
 
-type RightSize = int
+type PieceTreeRightSize = int
 
-type RightLines = int
+type PieceTreeRightLines = int
 
 type PieceStart = int
 
@@ -26,15 +26,15 @@ type PieceTree =
     Usually these are only accessed directly in the AVL-Tree specific functions. 
     I do not generally encourage extremely long tuples like this.
 *)
-  | PT of AvlHeight     * 
-          PieceTree     *
-          LeftLines     *
-          LeftSize      *
-          PieceStart    *
-          PieceLength   *
-          PieceLines    *
-          RightSize     *
-          RightLines    *
+  | PT of PieceTreeHeight       * 
+          PieceTree             *
+          PieceTreeLeftLines    *
+          PieceTreeLeftSize     *
+          PieceStart            *
+          PieceLength           *
+          PieceLines            *
+          PieceTreeRightSize    *
+          PieceTreeRightLines   *
           PieceTree
 
 /// A PieceLine stores the content of a line and the index the line starts at.

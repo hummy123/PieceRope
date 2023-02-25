@@ -1,17 +1,17 @@
-namespace HumzApps.TextBuffer
+namespace HumzApps.TextDocument
 
-type AvlHeight = int
+type PieceBufferHeight = int
 
-type LeftSize = int
+type PieceBufferLeftSize = int
 
-type RightSize = int
+type PieceBufferRightSize = int
 
 /// A PieceBuffer represents a Buffer which stores text in the abstract Piece Table data structure.
 /// This implementation ignores the traditional distinction between an "original" and "append-only" buffer because all the text is stored in memory.
 /// Ignoring this distinction lets us reduce memory consumption and provide a more convenient API.
 type PieceBuffer =
   | BE
-  | BT of AvlHeight * PieceBuffer * LeftSize * string * RightSize * PieceBuffer
+  | BT of PieceBufferHeight * PieceBuffer * PieceBufferLeftSize * string * PieceBufferRightSize * PieceBuffer
 
 [<RequireQualifiedAccess>]
 module internal PieceBuffer =

@@ -2,8 +2,7 @@ module RopeInsertTests
 
 open System
 open Xunit
-open PieceRope
-open PieceRope.PieceRope
+open HumzApps.TextDocument
 
 [<Literal>]
 let text =
@@ -12,85 +11,103 @@ let text =
 [<Literal>]
 let insText = "TEST!"
 
-let initialTable = PieceRope.create text
+let initialTable = TextDocument.create text
 
 [<Fact>]
 let ``Initial table's text returns input text`` () =
-    Assert.Equal(text, PieceRope.text initialTable)
+    Assert.Equal(text, TextDocument.text initialTable)
 
 [<Fact>]
 let ``Can insert into the start of an empty table`` () =
-    let rope = PieceRope.create ""
-    let rope = rope.Insert(0, insText)
-    Assert.Equal(insText, rope.Text())
+    let ropeText = 
+      TextDocument.create ""
+      |> TextDocument.insert 0 insText
+      |> TextDocument.text
+    Assert.Equal(insText, ropeText)
 
 [<Fact>]
 let ``Can insert into the start of a table's OriginalBuffer`` () =
-    let table = initialTable.Insert(0, insText)
-    Assert.Equal(insText + text, table.Text())
+    let tableText = 
+      TextDocument.insert 0 insText initialTable
+      |> TextDocument.text
+    Assert.Equal(insText + text, tableText)
 
 [<Fact>]
 let ``Can insert into the middle of a table's OriginalBuffer`` () =
-    let table = initialTable.Insert(3, insText)
+    let tableText = 
+      TextDocument.insert 3 insText initialTable
+      |> TextDocument.text
     let firstStr = text.Substring(0, 3)
     let thirdStr = text.Substring(3)
     let str = firstStr + insText + thirdStr
-    Assert.Equal(str, table.Text())
+    Assert.Equal(str, tableText)
 
 [<Fact>]
 let ``Can insert into the end of a table's OriginalBuffer`` () =
-    let table = initialTable.Insert(text.Length, insText)
+    let tableText = 
+      TextDocument.insert text.Length insText initialTable
+      |> TextDocument.text
     let str = text + insText
-    Assert.Equal(str, table.Text())
+    Assert.Equal(str, tableText)
 
 [<Fact>]
 let ``Can insert into the start of a table's AddBuffer`` () =
-    let table = PieceRope.create ""
-    let table = table.Insert(0, text)
-    let table = table.Insert(0, insText)
-    Assert.Equal(insText + text, table.Text())
+    let tableText = 
+      TextDocument.create ""
+      |> TextDocument.insert 0 text
+      |> TextDocument.insert 0 insText
+      |> TextDocument.text
+    Assert.Equal(insText + text, tableText)
 
 [<Fact>]
 let ``Can insert into the middle of a table's AddBuffer`` () =
-    let table = PieceRope.create ""
-    let table = table.Insert(0, text)
-    let table = table.Insert(3, insText)
+    let tableText = 
+      TextDocument.create ""
+      |> TextDocument.insert 0 text
+      |> TextDocument.insert 3 insText
+      |> TextDocument.text
     let firstStr = text.Substring(0, 3)
     let thirdStr = text.Substring(3)
     let str = firstStr + insText + thirdStr
-    Assert.Equal(str, table.Text())
+    Assert.Equal(str, tableText)
 
 [<Fact>]
 let ``Can insert into the end of a table's AddBuffer`` () =
-    let table = PieceRope.create ""
-    let table = table.Insert(0, text)
-    let table = table.Insert(text.Length, insText)
-    Assert.Equal(text + insText, table.Text())
+    let tableText = 
+      TextDocument.create ""
+      |> TextDocument.insert 0 text
+      |> TextDocument.insert text.Length insText
+      |> TextDocument.text
+    Assert.Equal(text + insText, tableText)
 
 [<Fact>]
 let ``Can continuously insert at start`` () =
-    let mutable table = PieceRope.create ""
+    let mutable table = TextDocument.create ""
     let mutable runningStr = ""
     for i in [0..10] do
-        table <- table.Insert(0, "hello")
+        table <- TextDocument.insert 0 "hello" table
+        let tableText = TextDocument.text table
         runningStr <- runningStr + "hello"
-        Assert.Equal(runningStr, table.Text())
+        Assert.Equal(runningStr, tableText)
 
 [<Fact>]
 let ``Can continuously insert at middle`` () =
-    let mutable table = PieceRope.create ""
+    let mutable table = TextDocument.empty
     let mutable runningStr = ""
     for i in [0..10] do
         let halfLength = runningStr.Length / 2
-        table <- table.Insert(halfLength, "hello")
+        table <- TextDocument.insert halfLength "hello" table
         runningStr <- runningStr.Substring(0,halfLength) + "hello" + runningStr.Substring(halfLength)
-    Assert.Equal(runningStr, table.Text())
+    let tableText = TextDocument.text table
+    Assert.Equal(runningStr, tableText)
 
 [<Fact>]
 let ``Can continuously insert at end`` () =
-    let mutable table = PieceRope.create ""
+    let mutable table = TextDocument.create ""
     let mutable runningStr = ""
     for i in [0..10] do
-        table <- table.Insert(runningStr.Length, "hello")
+        table <- TextDocument.insert runningStr.Length "hello" table
         runningStr <- runningStr + "hello"
-    Assert.Equal(runningStr, table.Text())
+    let tableText = TextDocument.text table
+    Assert.Equal(runningStr, tableText)
+
