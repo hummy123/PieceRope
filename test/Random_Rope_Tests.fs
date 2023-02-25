@@ -25,7 +25,7 @@ let ``String and rope return same text after a series of inputs`` () =
     let mutable testString = initString
     let mutable testRope = initRope
 
-    for i in [0..20] do
+    for i in [0..100] do
         // Generate inputs
         let insStr = charGen
         let idx = idxGen testString.Length
@@ -40,7 +40,7 @@ let ``String and rope return same substring after a series of inserts`` () =
     let mutable testString = initString
     let mutable testRope = initRope
 
-    for i in [0..20] do
+    for i in [0..100] do
         // Generate inputs
         let insStr = charGen
         let idx = idxGen testString.Length
@@ -62,7 +62,7 @@ let ``String and rope return same line after a series of newline inserts`` () =
     let mutable testString = initString
     let mutable testRope = initRope
 
-    for i in [0..20] do
+    for i in [0..100] do
         // Generate inputs
         let insStr = "\n"
         let idx = idxGen testString.Length
@@ -89,7 +89,7 @@ let ``String and rope return same text after a series of deletions`` () =
     let mutable testString = initString
     let mutable testRope = initRope
 
-    for i in [0..20] do
+    for i in [0..100] do
         // Generate deletion idx and length
         let idx = idxGen <| Math.Max(testString.Length - 1, 0)
         let remainLength = testString.Length - idx
@@ -112,7 +112,7 @@ let ``String and rope return same substring after a series of deletions`` () =
     let mutable testString = initString
     let mutable testRope = initRope
 
-    for i in [0..20] do
+    for i in [0..100] do
         // Generate deletion idx and length
         let idx = idxGen <| Math.Max(testString.Length - 1, 0)
         let remainLength = testString.Length - idx
@@ -147,7 +147,7 @@ let ``String and rope return same line after a series of deletions`` () =
     let mutable testString = initString
     let mutable testRope = initRope
 
-    for i in [0..20] do
+    for i in [0..100] do
         // Generate deletion idx and length
         let idx = idxGen <| Math.Max(testString.Length - 1, 0)
         let remainLength = testString.Length - idx
