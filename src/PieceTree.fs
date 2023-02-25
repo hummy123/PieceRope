@@ -279,13 +279,13 @@ module internal PieceTree =
             
 
 (* Repeated if-statements used both for delete and substring. *)
-  let inline private nodeInSubstringRange start curIndex finish nodeEndIndex =
+  let inline private nodeInRange start curIndex finish nodeEndIndex =
     start <= curIndex && finish >= nodeEndIndex
 
-  let inline private endOfNodeInSubstringRange start curIndex finish nodeEndIndex =
+  let inline private startOfNodeInRange start curIndex finish nodeEndIndex =
     start <= curIndex && finish < nodeEndIndex && curIndex < finish
 
-  let inline private startOfNodeInSubstringRange start curIndex finish nodeEndIndex =
+  let inline private endOfNodeInRange start curIndex finish nodeEndIndex =
     start > curIndex && finish >= nodeEndIndex && start <= nodeEndIndex
 
   let inline private middleOfNodeInSubstringRange start curIndex finish nodeEndIndex =
@@ -299,7 +299,8 @@ module internal PieceTree =
           PE |> cont
       | PT(_, l, _, lidx, curStart, curLength, curLines, ridx, _, r) ->
           let nodeEndIndex = curIndex + curLength
-          if nodeInSubstringRange start curIndex finish nodeEndIndex then
+          (* Whole |node| is range. *)
+          if nodeInRange start curIndex finish nodeEndIndex then
             let recurseLeftIndex = curIndex - nLength l - sizeRight l
             let recurseRightIndex = nodeEndIndex + sizeLeft r
 
@@ -312,31 +313,31 @@ module internal PieceTree =
                   balR newLeft newStart newLength newLines r' |> cont
               )
             )
-
-          elif endOfNodeInSubstringRange start curIndex finish nodeEndIndex then
+          (* Start of |no|de in range which means start of node but end of range. *)
+          elif startOfNodeInRange start curIndex finish nodeEndIndex then
             let recurseLeftIndex = curIndex - nLength l - sizeRight l
             del recurseLeftIndex l (fun l' ->
               let (newStart, newLength, newLines) = deleteAtStart curIndex finish curStart curLength curLines
               balR l' newStart newLength newLines r |> cont
             )
-
-          elif startOfNodeInSubstringRange start curIndex finish nodeEndIndex then
+          (* End of no|de| in range which means end of node but start of range. *)
+          elif endOfNodeInRange start curIndex finish nodeEndIndex then
             let recurseRightIndex = nodeEndIndex + sizeLeft r
             del recurseRightIndex r (fun r' ->
               let (length, lines) = deleteAtEnd curIndex start curLines
               balL l curStart length lines r' |> cont
             )
-          
+          (* Range is in middle of n|od|e which means we don't need to recurse further. *)
           elif middleOfNodeInSubstringRange start curIndex finish nodeEndIndex then
             let (p1Length, p1Lines, p2Start, p2Length, p2Lines) = 
               deleteInRange curIndex start finish curStart curLength curLines
             let r' = prepend p2Start p2Length p2Lines r
             balR l curStart p1Length p1Lines r' |> cont
-
+          (* Range is to left so recurse leftwards. *)
           elif start < curIndex then
             let recurseLeftIndex = curIndex - nLength l - sizeRight l
             del recurseLeftIndex l (fun l' -> balR l' curStart curLength curLines r |> cont)
-
+          (* Range is to right so recurse rightwards. *)
           else
             let recurseRightIndex = nodeEndIndex + sizeLeft r
             del recurseRightIndex r (fun r' -> balL l curStart curLength curLines r' |> cont)
