@@ -8,7 +8,6 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Compile Include="Buffer_Substring_Tests.fs" />
     <Compile Include="Rope_Insert_Tests.fs" />
     <Compile Include="Rope_Delete_Tests.fs" />
     <Compile Include="Rope_Substring_Tests.fs" />
@@ -33,7 +32,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\CrdtBenchmarks\PieceRopeCrdtBenchmarks.csproj" />
-    <ProjectReference Include="..\src\PieceRope.fsproj" />
+    <ProjectReference Include="..\src\TextDocument.fsproj" />
   </ItemGroup>
 
 </Project>

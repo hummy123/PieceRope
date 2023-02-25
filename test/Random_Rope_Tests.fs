@@ -4,7 +4,7 @@ open System
 open Xunit
 open FsCheck
 open FsCheck.Xunit
-open PieceRope
+open TextDocument
 open PieceRope.PieceRope
 
 // Initial data
