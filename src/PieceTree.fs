@@ -1,4 +1,10 @@
-namespace HumzApps.TextBuffer
+namespace rec HumzApps.TextBuffer
+(* 
+  Only reason for recursive namespace is to attach module methods to retrieve total length / lines to type.
+  There are no circular dependencies anywhere else.
+.*)
+
+open System.Text
 
 type AvlHeight = int
 
@@ -34,15 +40,22 @@ type PieceTree =
           RightSize     *
           RightLines    *
           PieceTree
+  with 
+  member inline this.Length = PieceTree.size this
+  member inline this.Lines = PieceTree.lines this
 
-open System.Text
+/// A PieceLine stores the content of a line and the index the line starts at.
+type PieceLine = {
+  Content: string;
+  StartIndex: int;
+}
 
 [<RequireQualifiedAccess>]
 module internal PieceTree =
   let inline private topLevelCont x = x
 
   (* Folds over pieces in a PieceTree in order. Useful for other functions such as saving, serialisation or retrieving text. *)
-  let internal foldPieces folder initialState tree =
+  let foldPieces folder initialState tree =
     let rec fold state node cont =
       match node with
       | PE -> 
@@ -68,12 +81,12 @@ module internal PieceTree =
     | PE -> 0
     | PT(_, _, _, _, _, _, lines, _, _, _) -> lines.Length
 
-  let inline private size tree =
+  let inline size tree =
     match tree with
     | PE -> 0
     | PT(_, _, _, lm, _, len, _, rm, _, _) -> len + lm + rm
 
-  let inline private lines tree =
+  let inline lines tree =
     match tree with
     | PE -> 0
     | PT(_, _, ll, _, _, _, lines, _, rl, _) -> ll + rl + lines.Length
@@ -168,7 +181,7 @@ module internal PieceTree =
         then p2Lines.Add i
     p1Lines.ToArray(), p2Lines.ToArray()
 
-  let inline deleteInRange curIndex start finish pieceStart pieceLength pieceLines =
+  let inline private deleteInRange curIndex start finish pieceStart pieceLength pieceLines =
     (* p1 retains metadata and p2 is leaf *)
     let finishDifference = finish - curIndex
     let p1Length = start - curIndex
@@ -177,7 +190,7 @@ module internal PieceTree =
     let p2Length = pieceLength - finishDifference
     (p1Length, p1Lines, p2Start, p2Length, p2Lines)
 
-  let inline deleteAtStart curIndex finish pieceStart pieceLength pieceLines =
+  let inline private deleteAtStart curIndex finish pieceStart pieceLength pieceLines =
     let difference = finish - curIndex
     let newStart = pieceStart + difference
     let newLength = pieceLength - difference
@@ -215,35 +228,35 @@ module internal PieceTree =
     existingStart + existingLength = insStart
 
   /// Inserts a piece at the start of the tree.
-  let internal prepend pcStart pcLength pcLines tree =
+  let prepend pcStart pcLength pcLines tree =
     let rec pre node cont =
       match node with
       | PE -> 
           mk PE pcStart pcLength pcLines PE |> cont
-      | PT(_, l, _, _, curStart, curLength, curLines, _, _, r) ->
-          pre l (fun l' -> balL l' curStart curLength curLines r |> cont)
+      | PT(_, l, _, _, nodeStart, nodeLength, nodeLines, _, _, r) ->
+          pre l (fun l' -> balL l' nodeStart nodeLength nodeLines r |> cont)
     pre tree topLevelCont
 
   /// Inserts a piece at the end of the tree. Will not merge two consecutive pieces.
-  let internal insMax pcStart pcLength pcLines tree =
+  let insMax pcStart pcLength pcLines tree =
     let rec max node cont =
       match node with
       | PE ->
           mk PE pcStart pcLength pcLines PE |> cont
-      | PT(_, l, _, _, curStart, curLength, curLines, _, _, r) ->
-          max r (fun r' -> balR l curStart curLength curLines r' |> cont)
+      | PT(_, l, _, _, nodeStart, nodeLength, nodeLines, _, _, r) ->
+          max r (fun r' -> balR l nodeStart nodeLength nodeLines r' |> cont)
     max tree topLevelCont
 
   /// Appends a piece to the end of the tree. Will merge with the currently-last piece if possible.
-  let internal append pcStart pcLength pcLines tree =
+  let append pcStart pcLength pcLines tree =
     let rec app node cont =
       match node with
       | PE ->
           mk PE pcStart pcLength pcLines PE |> cont
-      | PT(_, l, _, _, curStart, curLength, curLines, _, _, PE) when isConsecutive curStart curLength pcStart ->
-          mk l curStart (curLength + pcLength) (Array.append curLines pcLines) PE |> cont
-      | PT(_, l, _, _, curStart, curLength, curLines, _, _, r) ->
-          app r (fun r' -> balR l curStart curLength curLines r' |> cont)
+      | PT(_, l, _, _, nodeStart, nodeLength, nodeLines, _, _, PE) when isConsecutive nodeStart nodeLength pcStart ->
+          mk l nodeStart (nodeLength + pcLength) (Array.append nodeLines pcLines) PE |> cont
+      | PT(_, l, _, _, nodeStart, nodeLength, nodeLines, _, _, r) ->
+          app r (fun r' -> balR l nodeStart nodeLength nodeLines r' |> cont)
     app tree topLevelCont
 
   /// Inserts a piece into a tree at the specified index. Will merge if this piece is consecutive with another.
@@ -252,29 +265,29 @@ module internal PieceTree =
       match node with
       | PE -> 
           mk PE pcStart pcLength pcLines PE |> cont
-      | PT(_, l, _, lidx, curStart, curLength, curLines, ridx, _, r) ->
-          let nodeEndIndex = curIndex + curLength
+      | PT(_, l, _, lidx, nodeStart, nodeLength, nodeLines, ridx, _, r) ->
+          let nodeEndIndex = curIndex + nodeLength
           if insIndex < curIndex then
             let nextIndex = curIndex - nLength l - sizeRight l 
-            ins nextIndex l (fun l' -> balL l' curStart curLength curLines r |> cont)
+            ins nextIndex l (fun l' -> balL l' nodeStart nodeLength nodeLines r |> cont)
           elif insIndex > nodeEndIndex then
             let nextIndex = nodeEndIndex + sizeLeft r
-            ins nextIndex r (fun r' -> balR l curStart curLength curLines r' |> cont)
+            ins nextIndex r (fun r' -> balR l nodeStart nodeLength nodeLines r' |> cont)
           elif insIndex = curIndex then
             let l' = insMax pcStart pcLength pcLines l
-            balL l' curStart curLength curLines r |> cont
+            balL l' nodeStart nodeLength nodeLines r |> cont
           elif insIndex = nodeEndIndex then
-            if isConsecutive curStart curLength pcStart then
-              mk l curStart (curLength + pcLength) (Array.append curLines pcLines) r |> cont
+            if isConsecutive nodeStart nodeLength pcStart then
+              mk l nodeStart (nodeLength + pcLength) (Array.append nodeLines pcLines) r |> cont
             else
               let r' = prepend pcStart pcLength pcLines r
-              balR l curStart curLength curLines r' |> cont
+              balR l nodeStart nodeLength nodeLines r' |> cont
           else
             let difference = insIndex - curIndex
-            let rStart = curStart + difference
-            let rLength = curLength - difference
-            let (leftLines, rightLines) = splitLines rStart curLines
-            let l' = insMax curStart difference leftLines l
+            let rStart = nodeStart + difference
+            let rLength = nodeLength - difference
+            let (leftLines, rightLines) = splitLines rStart nodeLines
+            let l' = insMax nodeStart difference leftLines l
             let r' = prepend rStart rLength rightLines r
             mk l' pcStart pcLength pcLines r' |> cont
     ins (sizeLeft tree) tree topLevelCont
@@ -299,8 +312,8 @@ module internal PieceTree =
       match node with
       | PE -> 
           PE |> cont
-      | PT(_, l, _, lidx, curStart, curLength, curLines, ridx, _, r) ->
-          let nodeEndIndex = curIndex + curLength
+      | PT(_, l, _, lidx, nodeStart, nodeLength, nodeLines, ridx, _, r) ->
+          let nodeEndIndex = curIndex + nodeLength
           (* Whole |node| is range. *)
           if nodeInRange start curIndex finish nodeEndIndex then
             let recurseLeftIndex = curIndex - nLength l - sizeRight l
@@ -319,30 +332,30 @@ module internal PieceTree =
           elif startOfNodeInRange start curIndex finish nodeEndIndex then
             let recurseLeftIndex = curIndex - nLength l - sizeRight l
             del recurseLeftIndex l (fun l' ->
-              let (newStart, newLength, newLines) = deleteAtStart curIndex finish curStart curLength curLines
+              let (newStart, newLength, newLines) = deleteAtStart curIndex finish nodeStart nodeLength nodeLines
               balR l' newStart newLength newLines r |> cont
             )
           (* End of no|de| in range which means end of node but start of range. *)
           elif endOfNodeInRange start curIndex finish nodeEndIndex then
             let recurseRightIndex = nodeEndIndex + sizeLeft r
             del recurseRightIndex r (fun r' ->
-              let (length, lines) = deleteAtEnd curIndex start curLines
-              balL l curStart length lines r' |> cont
+              let (length, lines) = deleteAtEnd curIndex start nodeLines
+              balL l nodeStart length lines r' |> cont
             )
           (* Range is in middle of n|od|e which means we don't need to recurse further. *)
           elif middleOfNodeInSubstringRange start curIndex finish nodeEndIndex then
             let (p1Length, p1Lines, p2Start, p2Length, p2Lines) = 
-              deleteInRange curIndex start finish curStart curLength curLines
+              deleteInRange curIndex start finish nodeStart nodeLength nodeLines
             let r' = prepend p2Start p2Length p2Lines r
-            balR l curStart p1Length p1Lines r' |> cont
+            balR l nodeStart p1Length p1Lines r' |> cont
           (* Range is to left so recurse leftwards. *)
           elif start < curIndex then
             let recurseLeftIndex = curIndex - nLength l - sizeRight l
-            del recurseLeftIndex l (fun l' -> balR l' curStart curLength curLines r |> cont)
+            del recurseLeftIndex l (fun l' -> balR l' nodeStart nodeLength nodeLines r |> cont)
           (* Range is to right so recurse rightwards. *)
           else
             let recurseRightIndex = nodeEndIndex + sizeLeft r
-            del recurseRightIndex r (fun r' -> balL l curStart curLength curLines r' |> cont)
+            del recurseRightIndex r (fun r' -> balL l nodeStart nodeLength nodeLines r' |> cont)
     del (sizeLeft tree) tree topLevelCont
 
   let substring (start: int) (length: int) tree buffer =
@@ -351,27 +364,27 @@ module internal PieceTree =
     let rec sub curIndex node cont =
       match node with
       | PE -> () |> cont
-      | PT(_, l, _, lidx, curStart, curLength, curLines, ridx, _, r) ->
-          let nodeEndIndex = curIndex + curLength
+      | PT(_, l, _, lidx, nodeStart, nodeLength, nodeLines, ridx, _, r) ->
+          let nodeEndIndex = curIndex + nodeLength
           if endOfNodeInRange start curIndex finish nodeEndIndex then
             let recurseRightIndex = nodeEndIndex + sizeLeft r
-            sb.Append (textAtEnd curIndex start curStart curLength buffer) |> ignore
+            sb.Append (textAtEnd curIndex start nodeStart nodeLength buffer) |> ignore
             sub recurseRightIndex r (fun x -> x |> cont)
           elif nodeInRange start curIndex finish nodeEndIndex then
             let recurseLeftIndex = curIndex - nLength l - sizeRight l
             let recurseRightIndex = nodeEndIndex + sizeLeft r
             sub recurseLeftIndex l (fun _ ->
-              sb.Append (text curStart curLength buffer) |> ignore
+              sb.Append (text nodeStart nodeLength buffer) |> ignore
               sub recurseRightIndex r (fun x -> x |> cont)
             )
           elif startOfNodeInRange start curIndex finish nodeEndIndex then
             let recurseLeftIndex = curIndex - nLength l - sizeRight l
             sub recurseLeftIndex l (fun _ -> 
-              let text = textAtStart curIndex finish curStart buffer
+              let text = textAtStart curIndex finish nodeStart buffer
               cont(sb.Append text |> ignore)
             )
           elif middleOfNodeInSubstringRange start curIndex finish nodeEndIndex then
-            sb.Append (textInRange curIndex start finish curStart buffer) |> ignore
+            sb.Append (textInRange curIndex start finish nodeStart buffer) |> ignore
             cont()
           elif start < curIndex then
             let recurseLeftIndex = curIndex - nLength l - sizeRight l
@@ -381,3 +394,97 @@ module internal PieceTree =
             sub recurseRightIndex r (fun x -> x |> cont)
     sub (sizeLeft tree) tree topLevelCont
     sb.ToString()
+
+(* Delete/substring if-statements adapted to work with lines. *)
+  let inline private nodeInLine nodeStartLine searchLine nodeEndLine =
+    nodeStartLine = searchLine && searchLine = nodeEndLine
+
+  let inline private endOfLineInNode nodeStartLine searchLine nodeEndLine =
+    nodeStartLine = searchLine && searchLine < nodeEndLine
+
+  let inline private startOfLineInNode nodeStartLine searchLine nodeEndLine =
+    nodeStartLine < searchLine && searchLine = nodeEndLine
+
+  let inline private lineWithinNode nodeStartLine searchLine nodeEndLine =
+    nodeStartLine < searchLine && nodeEndLine > searchLine
+
+  let getLineAndLineStartIndex line tree buffer =
+    let sb = StringBuilder()
+    let rec get curLine curIndex node cont =
+      match node with
+      | PE -> None
+      | PT(_, l, _, lidx, nodeStart, nodeLength, nodeLines, ridx, _, r) ->
+          let nodeEndLine = curLine + nodeLines.Length
+
+          if startOfLineInNode curLine line nodeEndLine then
+            let lineStart = nodeLines[nodeLines.Length - 1] + 1
+            let length = nodeLength - lineStart + nodeStart
+            sb.Append (atStartAndLength lineStart length buffer) |> ignore
+            
+            let lineStartIndex = Some(curIndex + nodeLength - lineStart)
+            let recurseRightLine = nodeEndLine + linesLeft r
+            let recurseRightIndex = curIndex + nodeLength + sizeLeft r
+            get recurseRightLine recurseRightIndex r (fun _ -> lineStartIndex |> cont)
+
+          elif nodeInLine curLine line nodeEndLine then
+            let recurseLeftLine = curLine - nLines l - linesRight l
+            let recurseRightLine = nodeEndLine + linesLeft r
+            let recurseLeftIndex = curIndex - nLength l - sizeRight l
+            let recurseRightIndex = curIndex + nodeLength + sizeLeft r
+            get recurseLeftLine recurseLeftIndex l (fun lidx ->
+              sb.Append (text nodeStart curLine buffer) |> ignore
+              get recurseRightLine recurseRightIndex r (fun _ ->
+                match lidx with
+                | Some _ -> lidx |> cont
+                | None -> (Some curIndex) |> cont
+              )
+            )
+
+          elif endOfLineInNode curLine line nodeEndLine then
+            let length = nodeLines[0] + 1 - nodeStart
+            let recurseLeftLine = curLine - nLines l - linesRight l
+            let recurseRightLine = nodeEndLine + linesLeft r
+            let recurseLeftIndex = curIndex - nLength l - sizeRight l
+            let recurseRightIndex = curIndex + nodeLength + sizeLeft r
+            get recurseLeftLine recurseLeftIndex l (fun lidx ->
+              sb.Append (atStartAndLength nodeStart length buffer) |> ignore
+              match lidx with
+                | Some _ -> lidx |> cont
+                | None -> (Some curIndex) |> cont
+            )
+
+          elif lineWithinNode curLine line nodeEndLine then
+            let lineDifference = line - curLine
+            let lineStart = nodeLines[lineDifference - 1] + 1
+            let lineLength = nodeLines[lineDifference] - lineStart + 1
+            sb.Append (atStartAndLength lineStart lineLength buffer) |> ignore
+            let lineStartIndex = Some((lineStart - nodeStart) - curIndex)
+            lineStartIndex |> cont
+
+          elif line < curLine then
+            let recurseLeftLine = curLine - nLines l - linesRight l
+            let recurseLeftIndex = curIndex - nLength l - sizeRight l
+            get recurseLeftLine recurseLeftIndex l (fun x -> x |> cont)
+
+          else
+            let recurseRightLine = nodeEndLine + linesLeft r
+            let recurseRightIndex = curIndex + nodeLength + sizeLeft r
+            get recurseRightLine recurseRightIndex r (fun x -> x |> cont)
+
+    match get (linesLeft tree) (sizeLeft tree) tree topLevelCont with
+    | Some idx ->
+        { Content = sb.ToString(); StartIndex = idx; }
+    | None ->
+        { Content = sb.ToString(); StartIndex = 0; }
+
+  let getLine line tree buffer = 
+    let content = getLineAndLineStartIndex line tree buffer
+    content.Content
+
+  let getText tree buffer =
+    let sb = StringBuilder(size tree)
+    foldPieces (fun _ start length _ -> 
+      sb.Append (atStartAndLength start length buffer) |> ignore
+    ) () tree
+    sb.ToString()
+
