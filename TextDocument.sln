@@ -7,6 +7,8 @@ Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "TextDocument", "src\TextDoc
 EndProject
 Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "RopeTests", "test\RopeTests.fsproj", "{AFC479D4-CEA3-4054-ADB2-D0A66DBADA57}"
 EndProject
+Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "PieceRopeBenchmarks", "benchmarks\PieceRopeBenchmarks.fsproj", "{D4E1719F-CC30-4E29-B577-73DFEDF5B75B}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -24,5 +26,9 @@ Global
 		{AFC479D4-CEA3-4054-ADB2-D0A66DBADA57}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{AFC479D4-CEA3-4054-ADB2-D0A66DBADA57}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{AFC479D4-CEA3-4054-ADB2-D0A66DBADA57}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D4E1719F-CC30-4E29-B577-73DFEDF5B75B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D4E1719F-CC30-4E29-B577-73DFEDF5B75B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D4E1719F-CC30-4E29-B577-73DFEDF5B75B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D4E1719F-CC30-4E29-B577-73DFEDF5B75B}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal

@@ -9,27 +9,21 @@ open BenchmarkDotNet.Running
 open BenchmarkDotNet.Jobs
 
 [<MemoryDiagnoser; HtmlExporter; MarkdownExporter>]
-type SvelteTxns() =
-  [<Benchmark; IterationCount(1000)>]
-  member this.Run() =
+type RunTxns() =
+  [<Benchmark; IterationCount(100)>]
+  member this.Svelte() =
     Utils.runTxns (Sveltecomponent.data)
 
-[<MemoryDiagnoser; HtmlExporter; MarkdownExporter>]
-type RustTxns() =
-  [<Benchmark; IterationCount(1000)>]
-  member this.Run() =
+  [<Benchmark; IterationCount(100)>]
+  member this.Rust() =
     Utils.runTxns (Rustcode.data)
 
-[<MemoryDiagnoser; HtmlExporter; MarkdownExporter>]
-type SephblogTxns() =
-  [<Benchmark; IterationCount(1000)>]
-  member this.Run() =
+  [<Benchmark; IterationCount(100)>]
+  member this.Sephblog() =
     Utils.runTxns (Sephblog.data)
 
-[<MemoryDiagnoser; HtmlExporter; MarkdownExporter>]
-type AutomergeTxns() =
-  [<Benchmark; IterationCount(1000)>]
-  member this.Run() =
+  [<Benchmark; IterationCount(100)>]
+  member this.Automerge() =
     Utils.runTxns (Automerge.data)
 
 [<MemoryDiagnoser; HtmlExporter; MarkdownExporter>]
@@ -128,11 +122,7 @@ type GetSubstring() =
 module Main = 
     [<EntryPoint>]
     let Main _ =
-        BenchmarkRunner.Run<SvelteTxns>() |> ignore
-        BenchmarkRunner.Run<RustTxns>() |> ignore
-        BenchmarkRunner.Run<SephblogTxns>() |> ignore
-        BenchmarkRunner.Run<AutomergeTxns>() |> ignore
-
+        BenchmarkRunner.Run<RunTxns>() |> ignore
         BenchmarkRunner.Run<CreateDocument>() |> ignore
         BenchmarkRunner.Run<InsertIntoDocument>() |> ignore
         BenchmarkRunner.Run<DeleteFromDocument>() |> ignore
