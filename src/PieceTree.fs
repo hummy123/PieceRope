@@ -427,7 +427,7 @@ module internal PieceTree =
             let recurseLeftIndex = curIndex - nLength l - sizeRight l
             let recurseRightIndex = curIndex + nodeLength + sizeLeft r
             get recurseLeftLine recurseLeftIndex l (fun lidx ->
-              sb.Append (pieceText nodeStart curLine buffer) |> ignore
+              sb.Append (pieceText nodeStart nodeLength buffer) |> ignore
               get recurseRightLine recurseRightIndex r (fun _ ->
                 match lidx with
                 | Some _ -> lidx |> cont
