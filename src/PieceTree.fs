@@ -35,6 +35,8 @@ type PieceTree =
           RightLines    *
           PieceTree
 
+open System.Text
+
 [<RequireQualifiedAccess>]
 module internal PieceTree =
   let inline private topLevelCont x = x
@@ -342,3 +344,40 @@ module internal PieceTree =
             let recurseRightIndex = nodeEndIndex + sizeLeft r
             del recurseRightIndex r (fun r' -> balL l curStart curLength curLines r' |> cont)
     del (sizeLeft tree) tree topLevelCont
+
+  let substring (start: int) (length: int) tree buffer =
+    let finish = start + length
+    let sb = StringBuilder(length)
+    let rec sub curIndex node cont =
+      match node with
+      | PE -> () |> cont
+      | PT(_, l, _, lidx, curStart, curLength, curLines, ridx, _, r) ->
+          let nodeEndIndex = curIndex + curLength
+          if endOfNodeInRange start curIndex finish nodeEndIndex then
+            let recurseRightIndex = nodeEndIndex + sizeLeft r
+            sb.Append (textAtEnd curIndex start curStart curLength buffer) |> ignore
+            sub recurseRightIndex r (fun x -> x |> cont)
+          elif nodeInRange start curIndex finish nodeEndIndex then
+            let recurseLeftIndex = curIndex - nLength l - sizeRight l
+            let recurseRightIndex = nodeEndIndex + sizeLeft r
+            sub recurseLeftIndex l (fun _ ->
+              sb.Append (text curStart curLength buffer) |> ignore
+              sub recurseRightIndex r (fun x -> x |> cont)
+            )
+          elif startOfNodeInRange start curIndex finish nodeEndIndex then
+            let recurseLeftIndex = curIndex - nLength l - sizeRight l
+            sub recurseLeftIndex l (fun _ -> 
+              let text = textAtStart curIndex finish curStart buffer
+              cont(sb.Append text |> ignore)
+            )
+          elif middleOfNodeInSubstringRange start curIndex finish nodeEndIndex then
+            sb.Append (textInRange curIndex start finish curStart buffer) |> ignore
+            cont()
+          elif start < curIndex then
+            let recurseLeftIndex = curIndex - nLength l - sizeRight l
+            sub recurseLeftIndex l (fun x -> x |> cont)
+          else
+            let recurseRightIndex = nodeEndIndex + sizeLeft r
+            sub recurseRightIndex r (fun x -> x |> cont)
+    sub (sizeLeft tree) tree topLevelCont
+    sb.ToString()
