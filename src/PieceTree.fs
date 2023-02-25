@@ -1,8 +1,4 @@
-namespace rec HumzApps.TextBuffer
-(* 
-  Only reason for recursive namespace is to attach module methods to retrieve total length / lines to type.
-  There are no circular dependencies anywhere else.
-.*)
+namespace HumzApps.TextBuffer
 
 open System.Text
 
@@ -40,9 +36,6 @@ type PieceTree =
           RightSize     *
           RightLines    *
           PieceTree
-  with 
-  member inline this.Length = PieceTree.size this
-  member inline this.Lines = PieceTree.lines this
 
 /// A PieceLine stores the content of a line and the index the line starts at.
 type PieceLine = {
@@ -52,6 +45,8 @@ type PieceLine = {
 
 [<RequireQualifiedAccess>]
 module internal PieceTree =
+  let empty = PE
+
   let inline private topLevelCont x = x
 
   (* Folds over pieces in a PieceTree in order. Useful for other functions such as saving, serialisation or retrieving text. *)
@@ -197,30 +192,30 @@ module internal PieceTree =
     let newLines = Array.skipWhile (fun x -> x < difference) pieceLines
     (newStart, newLength, newLines)
 
-  let inline deleteAtEnd curIndex start pieceLines =
+  let inline private deleteAtEnd curIndex start pieceLines =
     let length = start - curIndex
     let lines = Array.takeWhile (fun x -> x <= length) pieceLines
     (length, lines)
 
-  let inline text pieceStart pieceLength buffer =
+  let inline private pieceText pieceStart pieceLength buffer =
     PieceBuffer.substring pieceStart pieceLength buffer
 
-  let inline textInRange curIndex start finish pieceStart buffer =
+  let inline private textInRange curIndex start finish pieceStart buffer =
     let textStart = start - curIndex + pieceStart
     let textLength = finish - curIndex + pieceStart - textStart
     PieceBuffer.substring textStart textLength buffer
 
-  let inline textAtStart curIndex finish pieceStart buffer =
+  let inline private textAtStart curIndex finish pieceStart buffer =
     let textLength = finish - curIndex
     PieceBuffer.substring pieceStart textLength buffer
 
-  let inline textAtEnd curIndex start pieceStart pieceLength buffer =
+  let inline private textAtEnd curIndex start pieceStart pieceLength buffer =
     let textStart = start - curIndex + pieceStart
     let textLength = pieceStart + pieceLength - textStart
     PieceBuffer.substring textStart textLength buffer
 
   /// Returns a substring at the provided start and length.
-  let inline atStartAndLength start length buffer =
+  let inline private atStartAndLength start length buffer =
     PieceBuffer.substring start length buffer
 
 (* Core PieceTree logic. *)
@@ -238,7 +233,7 @@ module internal PieceTree =
     pre tree topLevelCont
 
   /// Inserts a piece at the end of the tree. Will not merge two consecutive pieces.
-  let insMax pcStart pcLength pcLines tree =
+  let private insMax pcStart pcLength pcLines tree =
     let rec max node cont =
       match node with
       | PE ->
@@ -374,7 +369,7 @@ module internal PieceTree =
             let recurseLeftIndex = curIndex - nLength l - sizeRight l
             let recurseRightIndex = nodeEndIndex + sizeLeft r
             sub recurseLeftIndex l (fun _ ->
-              sb.Append (text nodeStart nodeLength buffer) |> ignore
+              sb.Append (pieceText nodeStart nodeLength buffer) |> ignore
               sub recurseRightIndex r (fun x -> x |> cont)
             )
           elif startOfNodeInRange start curIndex finish nodeEndIndex then
@@ -432,7 +427,7 @@ module internal PieceTree =
             let recurseLeftIndex = curIndex - nLength l - sizeRight l
             let recurseRightIndex = curIndex + nodeLength + sizeLeft r
             get recurseLeftLine recurseLeftIndex l (fun lidx ->
-              sb.Append (text nodeStart curLine buffer) |> ignore
+              sb.Append (pieceText nodeStart curLine buffer) |> ignore
               get recurseRightLine recurseRightIndex r (fun _ ->
                 match lidx with
                 | Some _ -> lidx |> cont

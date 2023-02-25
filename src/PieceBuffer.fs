@@ -40,7 +40,7 @@ module internal PieceBuffer =
     fold initialState buffer topLevelCont
 
   (* Retrieve PieceBuffer metadata. *)
-  let inline private size tree =
+  let inline size tree =
     match tree with
     | BE -> 0
     | BT(_, _, lm, v, rm, _) -> lm + v.Length + rm
