@@ -9,6 +9,7 @@ open System
 open System.IO
 open System.Text
 open System.Text.Json
+open System.Text.Json.Serialization
 open System.Globalization
 
 /// A TextDocument is an immutable data structure for manupilating text efficiently.
@@ -174,14 +175,14 @@ module TextDocument =
   let addToHistory document =
     { document with ShouldAddToHistory = true; }
 
-  type private JsonPiece = 
+  type JsonPiece = 
     {
       Start: int;
       Length: int;
       LineBreaks: int ResizeArray;
     }
 
-  type private JsonDocument = 
+  type JsonDocument = 
     {
       Buffer: string;
       Pieces: JsonPiece ResizeArray;
