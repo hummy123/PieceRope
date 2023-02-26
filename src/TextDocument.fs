@@ -6,6 +6,9 @@ namespace rec HumzApps.TextDocument
  *)
 
 open System
+open System.IO
+open System.Text
+open System.Text.Json
 open System.Globalization
 
 /// A TextDocument is an immutable data structure for manupilating text efficiently.
@@ -29,7 +32,7 @@ type TextDocument = {
   member inline this.GetLine line             = TextDocument.getLine line this
   member inline this.Text()                   = TextDocument.text this
 
-  member inline this.AddToHistory()          = TextDocument.addToHistory this
+  member inline this.AddToHistory()           = TextDocument.addToHistory this
   member inline this.CanUndo                  = TextDocument.canUndo this
   member inline this.CanRedo                  = TextDocument.canRedo this
   member inline this.Undo()                   = TextDocument.undo this
@@ -170,4 +173,63 @@ module TextDocument =
 
   let addToHistory document =
     { document with ShouldAddToHistory = true; }
+
+  type private JsonPiece = 
+    {
+      Start: int;
+      Length: int;
+      LineBreaks: int ResizeArray;
+    }
+
+  type private JsonDocument = 
+    {
+      Buffer: string;
+      Pieces: JsonPiece ResizeArray;
+      (* Below stacks are arrays of array, where nested array is a single tree and outer array is stacl. *)
+      UndoStack: JsonPiece ResizeArray ResizeArray;   
+      RedoStack: JsonPiece ResizeArray ResizeArray; 
+    }
+
+  let serialise (document: TextDocument) filePath =
+    async {
+      (* Helper function to add pieces in a given tree to a given array. *)
+      let deserialiseTree tree (arr: JsonPiece ResizeArray) =
+        PieceTree.foldPieces (fun _ start length lines ->
+          let piece = { Start = start; Length = length; LineBreaks = ResizeArray(lines); }
+          arr.Add piece
+        ) () tree
+
+      let deserialiseTreeList treeList (arr: JsonPiece ResizeArray ResizeArray) =
+        List.fold (fun _ tree -> 
+          let treeArr = ResizeArray(PieceTree.ht tree) (* Create new local array just for the current tree. *)
+          deserialiseTree tree treeArr
+          arr.Add treeArr
+        ) () treeList
+
+      (* Convert buffer to a single contiguuus string. *)
+      let sb = StringBuilder(PieceBuffer.size document.Buffer)
+      PieceBuffer.foldStrings (fun str -> sb.Append str |> ignore) () document.Buffer
+      let buffer = sb.ToString()
+
+      (* Convert pieces to a ResizeArray of JsonPiece. *)
+      let pieces = ResizeArray(PieceTree.ht document.Pieces) 
+      deserialiseTree document.Pieces pieces
+
+      (* Also convert undo and redo stacks to a ResizeArray of JsonPiece. *)
+      let undoArray = ResizeArray()
+      let redoArray = ResizeArray()
+      deserialiseTreeList document.UndoStack undoArray
+      deserialiseTreeList document.RedoStack redoArray
+
+      (* Construct record of various converted pieces. *)
+      let jsonDoc = {
+        Buffer = buffer;
+        Pieces = pieces;
+        UndoStack = undoArray;
+        RedoStack = redoArray;
+      }
+
+      use createStream = File.Create filePath
+      do! JsonSerializer.SerializeAsync(createStream, jsonDoc) |> Async.AwaitTask
+    }
 

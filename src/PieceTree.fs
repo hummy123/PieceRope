@@ -108,7 +108,7 @@ module internal PieceTree =
 
 (* AVL Tree-specific functions. 
  * Adapted from verified proof at https://isabelle.in.tum.de/library/HOL/HOL-Data_Structures/document.pdf . *)
-  let inline private ht tree =
+  let inline ht tree =
     match tree with
     | PE -> 0
     | PT(h, _, _, _, _, _, _, _, _, _) -> h
