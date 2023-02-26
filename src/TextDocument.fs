@@ -39,6 +39,8 @@ type TextDocument = {
   member inline this.Undo()                   = TextDocument.undo this
   member inline this.Redo()                   = TextDocument.redo this
 
+  member inline this.Serialise(filePath)      = TextDocument.serialise this
+
 /// The TextDocument module provides functions for inserting into, deleting from and querying ranges of text.
 [<RequireQualifiedAccess>]
 module TextDocument =
@@ -191,6 +193,8 @@ module TextDocument =
       RedoStack: JsonPiece ResizeArray ResizeArray; 
     }
 
+  /// Serialises a TextDocument to the given file path, preserving undo and redo history.
+  (* To do: Set a limit to how large a string we add to the StringBuilder, because 2 GB is max object size in .NET. *)
   let serialise (document: TextDocument) filePath =
     async {
       (* Helper function to add pieces in a given tree to a given array. *)
@@ -232,5 +236,37 @@ module TextDocument =
 
       use createStream = File.Create filePath
       do! JsonSerializer.SerializeAsync(createStream, jsonDoc) |> Async.AwaitTask
+    }
+
+  let deserialise (filePath: string) = 
+    async {
+      let deserialiseTree pieceArr =
+        let mutable pieces = PieceTree.empty
+        for piece in pieceArr do
+          pieces <- PieceTree.insMax piece.Start piece.Length (piece.LineBreaks.ToArray()) pieces
+        pieces
+
+      let deserialiseTrees historyArr =
+        let mutable lst = []
+        for tree in historyArr do
+          lst <- (deserialiseTree tree)::lst
+        lst
+
+      let! jsonString = File.ReadAllTextAsync(filePath) |> Async.AwaitTask
+      let jsonDoc = JsonSerializer.Deserialize<JsonDocument>(jsonString)
+      
+      let (_, charBreaks) = preprocessString jsonDoc.Buffer 0
+      let buffer = PieceBuffer.append jsonDoc.Buffer charBreaks PieceBuffer.empty
+      let pieces = deserialiseTree jsonDoc.Pieces
+      let undoStack = deserialiseTrees jsonDoc.UndoStack
+      let redoStack = deserialiseTrees jsonDoc.RedoStack
+
+      return {
+        Buffer = buffer;
+        Pieces = pieces;
+        UndoStack = undoStack;
+        RedoStack = redoStack;
+        ShouldAddToHistory = false;
+      }
     }
 

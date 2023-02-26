@@ -233,7 +233,7 @@ module internal PieceTree =
     pre tree topLevelCont
 
   /// Inserts a piece at the end of the tree. Will not merge two consecutive pieces.
-  let inline private insMax pcStart pcLength pcLines tree =
+  let inline insMax pcStart pcLength pcLines tree =
     let rec max node cont =
       match node with
       | PE ->
