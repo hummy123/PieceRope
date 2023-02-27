@@ -38,7 +38,7 @@ type TextDocument = {
   member inline this.Undo()                   = TextDocument.undo this
   member inline this.Redo()                   = TextDocument.redo this
 
-  member inline this.Serialise filePath       = TextDocument.serialise filePath this
+  member inline this.Serialise filePath       = TextDocument.serialise this filePath 
 
 /// The TextDocument module provides functions for inserting into, deleting from and querying ranges of text.
 [<RequireQualifiedAccess>]
@@ -158,7 +158,7 @@ module TextDocument =
   let addToHistory document =
     { document with ShouldAddToHistory = true; }
 
-  let serialise (filePath: string) document =
+  let serialise document (filePath: string) =
     async {
       let jsonDoc = 
         PieceConverter.convertToJsonDoc document.UndoStack document.Pieces document.RedoStack document.Buffer

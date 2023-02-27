@@ -44,6 +44,8 @@ type CreateDocument() =
 module Main = 
     [<EntryPoint>]
     let Main _ =
+        let rope = Utils.runTxns Sveltecomponent.data
+        TextDocument.serialise rope "svelte.json" |> Async.RunSynchronously
         BenchmarkRunner.Run<RunTxns>() |> ignore
         BenchmarkRunner.Run<CreateDocument>() |> ignore
         0
