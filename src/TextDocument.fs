@@ -10,7 +10,6 @@ open System.IO
 open System.Text
 open System.Text.Json
 open System.Text.Json.Serialization
-open System.Globalization
 
 /// A TextDocument is an immutable data structure for manupilating text efficiently.
 type TextDocument = {
@@ -39,7 +38,7 @@ type TextDocument = {
   member inline this.Undo()                   = TextDocument.undo this
   member inline this.Redo()                   = TextDocument.redo this
 
-  member inline this.Serialise(filePath)      = TextDocument.serialise this
+  member inline this.Serialise filePath       = TextDocument.serialise filePath this
 
 /// The TextDocument module provides functions for inserting into, deleting from and querying ranges of text.
 [<RequireQualifiedAccess>]
@@ -52,30 +51,12 @@ module TextDocument =
     ShouldAddToHistory = false;
   }
 
-  (* Preprocess string to generate an array of line breaks and a lookup table for grapheme clusters. *)
-  let inline private preprocessString (string: string) pcStart =
-    let enumerator = StringInfo.GetTextElementEnumerator(string)
-    let lineBreaks = ResizeArray() 
-    let charBreaks = ResizeArray(string.Length) (* Unicode line / character breaks. *)
-
-    let mutable graphemePos = 0 (* Tracking character count in terms of grapheme clusters (not UTF-16). *)
-    let mutable cur = "" (* Current TextElement. *)
-
-    while enumerator.MoveNext() do
-      cur <- enumerator.GetTextElement()
-      if cur.Contains("\n") || cur.Contains("\r") then 
-        lineBreaks.Add(graphemePos + pcStart)
-      charBreaks.Add enumerator.ElementIndex
-      graphemePos <- graphemePos + 1
-
-    lineBreaks.ToArray(), charBreaks.ToArray()
-
   let insert (index: int) (string: string) document =
     if String.IsNullOrEmpty string then
       document
     else
       let pcStart = PieceBuffer.size document.Buffer
-      let (lineBreaks, charBreaks) = preprocessString string pcStart
+      let (lineBreaks, charBreaks) = PieceString.preprocessString string pcStart
       let buffer = PieceBuffer.append string charBreaks document.Buffer
       let pieces = PieceTree.insert index pcStart charBreaks.Length lineBreaks document.Pieces
 
@@ -92,7 +73,7 @@ module TextDocument =
       document
     else
       let pcStart = PieceBuffer.size document.Buffer
-      let (lineBreaks, charBreaks) = preprocessString string pcStart
+      let (lineBreaks, charBreaks) = PieceString.preprocessString string pcStart
       let buffer = PieceBuffer.append string charBreaks document.Buffer
       let pieces = PieceTree.prepend pcStart charBreaks.Length lineBreaks document.Pieces
 
@@ -109,7 +90,7 @@ module TextDocument =
       document
     else
       let pcStart = PieceBuffer.size document.Buffer
-      let (lineBreaks, charBreaks) = preprocessString string pcStart
+      let (lineBreaks, charBreaks) = PieceString.preprocessString string pcStart
       let buffer = PieceBuffer.append string charBreaks document.Buffer
       let pieces = PieceTree.append pcStart charBreaks.Length lineBreaks document.Pieces
 
@@ -177,90 +158,19 @@ module TextDocument =
   let addToHistory document =
     { document with ShouldAddToHistory = true; }
 
-  type JsonPiece = 
-    {
-      Start: int;
-      Length: int;
-      LineBreaks: int ResizeArray;
-    }
-
-  type JsonDocument = 
-    {
-      Buffer: string;
-      Pieces: JsonPiece ResizeArray;
-      (* Below stacks are arrays of array, where nested array is a single tree and outer array is stacl. *)
-      UndoStack: JsonPiece ResizeArray ResizeArray;   
-      RedoStack: JsonPiece ResizeArray ResizeArray; 
-    }
-
-  /// Serialises a TextDocument to the given file path, preserving undo and redo history.
-  (* To do: Set a limit to how large a string we add to the StringBuilder, because 2 GB is max object size in .NET. *)
-  let serialise (document: TextDocument) filePath =
+  let serialise (filePath: string) document =
     async {
-      (* Helper function to add pieces in a given tree to a given array. *)
-      let deserialiseTree tree (arr: JsonPiece ResizeArray) =
-        PieceTree.foldPieces (fun _ start length lines ->
-          let piece = { Start = start; Length = length; LineBreaks = ResizeArray(lines); }
-          arr.Add piece
-        ) () tree
-
-      let deserialiseTreeList treeList (arr: JsonPiece ResizeArray ResizeArray) =
-        List.fold (fun _ tree -> 
-          let treeArr = ResizeArray(PieceTree.ht tree) (* Create new local array just for the current tree. *)
-          deserialiseTree tree treeArr
-          arr.Add treeArr
-        ) () treeList
-
-      (* Convert buffer to a single contiguuus string. *)
-      let sb = StringBuilder(PieceBuffer.size document.Buffer)
-      PieceBuffer.foldStrings (fun str -> sb.Append str |> ignore) () document.Buffer
-      let buffer = sb.ToString()
-
-      (* Convert pieces to a ResizeArray of JsonPiece. *)
-      let pieces = ResizeArray(PieceTree.ht document.Pieces) 
-      deserialiseTree document.Pieces pieces
-
-      (* Also convert undo and redo stacks to a ResizeArray of JsonPiece. *)
-      let undoArray = ResizeArray()
-      let redoArray = ResizeArray()
-      deserialiseTreeList document.UndoStack undoArray
-      deserialiseTreeList document.RedoStack redoArray
-
-      (* Construct record of various converted pieces. *)
-      let jsonDoc = {
-        Buffer = buffer;
-        Pieces = pieces;
-        UndoStack = undoArray;
-        RedoStack = redoArray;
-      }
-
+      let jsonDoc = 
+        PieceConverter.convertToJsonDoc document.UndoStack document.Pieces document.RedoStack document.Buffer
       use createStream = File.Create filePath
       do! JsonSerializer.SerializeAsync(createStream, jsonDoc) |> Async.AwaitTask
     }
 
   let deserialise (filePath: string) = 
     async {
-      let deserialiseTree pieceArr =
-        let mutable pieces = PieceTree.empty
-        for piece in pieceArr do
-          pieces <- PieceTree.insMax piece.Start piece.Length (piece.LineBreaks.ToArray()) pieces
-        pieces
-
-      let deserialiseTrees historyArr =
-        let mutable lst = []
-        for tree in historyArr do
-          lst <- (deserialiseTree tree)::lst
-        lst
-
       let! jsonString = File.ReadAllTextAsync(filePath) |> Async.AwaitTask
-      let jsonDoc = JsonSerializer.Deserialize<JsonDocument>(jsonString)
-      
-      let (_, charBreaks) = preprocessString jsonDoc.Buffer 0
-      let buffer = PieceBuffer.append jsonDoc.Buffer charBreaks PieceBuffer.empty
-      let pieces = deserialiseTree jsonDoc.Pieces
-      let undoStack = deserialiseTrees jsonDoc.UndoStack
-      let redoStack = deserialiseTrees jsonDoc.RedoStack
-
+      let jsonDoc = JsonSerializer.Deserialize<HumzApps.TextDocument.JsonDocument>(jsonString)
+      let (buffer, pieces, undoStack, redoStack) = PieceConverter.convertFromJsonDoc jsonDoc
       return {
         Buffer = buffer;
         Pieces = pieces;

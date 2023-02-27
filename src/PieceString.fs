@@ -1,5 +1,7 @@
 namespace HumzApps.TextDocument
 
+open System.Globalization
+
 type PieceString =
   | S of string               (* Normal UTF-16 string. *)
   | U of string * int array   (* UTF-16 string with array look-up table for grapheme clusters. *)
@@ -51,4 +53,26 @@ type PieceString =
     match this with
     | S s -> s
     | U(s, _) -> s
+
+[<RequireQualifiedAccess>]
+module internal PieceString =  
+  /// Preprocess string to generate an array of line breaks and a lookup table for grapheme clusters.
+  let inline preprocessString (string: string) pcStart =
+    let enumerator = StringInfo.GetTextElementEnumerator(string)
+    let lineBreaks = ResizeArray() 
+    let charBreaks = ResizeArray(string.Length) (* Unicode line / character breaks. *)
+
+    let mutable graphemePos = 0 (* Tracking character count in terms of grapheme clusters (not UTF-16). *)
+    let mutable cur = "" (* Current TextElement. *)
+
+    while enumerator.MoveNext() do
+      cur <- enumerator.GetTextElement()
+      if cur.Contains("\n") || cur.Contains("\r") then 
+        lineBreaks.Add(graphemePos + pcStart)
+      charBreaks.Add enumerator.ElementIndex
+      graphemePos <- graphemePos + 1
+
+    lineBreaks.ToArray(), charBreaks.ToArray()
+
+
 

@@ -9,6 +9,7 @@
     <Compile Include="PieceString.fs" />
     <Compile Include="PieceBuffer.fs" />
     <Compile Include="PieceTree.fs" />
+    <Compile Include="PieceConverter.fs" />
     <Compile Include="TextDocument.fs" />
   </ItemGroup>
 
